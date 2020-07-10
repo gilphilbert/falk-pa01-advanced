@@ -19,6 +19,7 @@ To do:
 #define COMMIT_TIMEOUT          400
 
 #define BUTTON_DEBOUNCE_DELAY   50
+#define BUTTON_LONG_PRESS       2000
 #define RELAY_PULSE             50
 
 
@@ -83,6 +84,7 @@ uint32_t screenTimer = 0;
 #define WIFI_BUTTON             33
 #define WIFI_TIMEOUT            60000
 const char* ssid = "FALK-PRE";
+uint32_t wifiButtonPressTime = 0;
 uint32_t wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
 WiFiServer server(80);
@@ -367,9 +369,15 @@ void wifiLoop(uint32_t m) {
   if (reading != wifibuttonstate) {
     Serial.println(reading);
     if (reading == LOW) {
-      enableWifi();
+      wifiButtonPressTime = m;
+      //enableWifi();
+    } else {
+      wifiButtonPressTime = 0;
     }
     wifibuttonstate = reading;
+  } else if ((reading == LOW) && (wifiButtonPressTime > 0) && (m > wifiButtonPressTime + BUTTON_LONG_PRESS)) {
+    enableWifi();
+    wifiButtonPressTime = 0;
   }
 
   if ((wifiConnectTimeout > 0) && (m > wifiConnectTimeout + WIFI_TIMEOUT)) {
@@ -392,7 +400,6 @@ void loop() {
   }
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
       preferences.putBytes("settings", &settings, sizeof(Settings));
-      Serial.println("Commited preferences");
       FlashCommit = 0;
   }
 }
