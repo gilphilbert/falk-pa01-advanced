@@ -38,8 +38,8 @@ To do:
 Preferences preferences;
 
 // for the volume rotary encoder
-#define VOL_ENCODER_A           21
-#define VOL_ENCODER_B           4
+#define VOL_ENCODER_A           27
+#define VOL_ENCODER_B           14
 #define VOL_MIN                 0
 #define VOL_MAX                 255
 ESP32Encoder volEnc;
@@ -47,19 +47,22 @@ uint32_t VolumeRelayPulseTime = 0;
 uint32_t FlashCommit = 0;
 
 // for the input rotary encoder
-#define INP_ENCODER_A           15
-#define INP_ENCODER_B           12
+#define INP_ENCODER_A           25
+#define INP_ENCODER_B           26
 #define INP_MIN                 1
 #define INP_MAX                 4
 ESP32Encoder inpEnc;
 uint32_t InputRelayPulseTime = 0;
 
 // to handle mute state
-#define MUTE_BUTTON             14
+#define MUTE_BUTTON             35
+#define MUTE_SET                32
+#define MUTE_RESET              33
 int muteState = 0;
 int muteButtonState;
 int lastmuteButtonState = HIGH;
 unsigned long muteDebounceTime = 0;
+uint32_t MuteRelayPulseTime = 0;
 
 typedef struct {
   uint16_t volume = 26;
@@ -71,9 +74,9 @@ typedef struct {
 Settings settings;
 
 // for the display
-#define SCREEN_CS               13
-#define SCREEN_DC               27
-#define SCREEN_RST              32
+#define SCREEN_CS               5
+#define SCREEN_DC               15
+#define SCREEN_RST              13
 #define SCREEN_TIMEOUT          10000
 //this uses the default SPI interface as defined by the manufacturer
 //NOTE: for the Adafruit HUZZAH32, use the *labelled pins*, not the standard ones for the ESP32
@@ -81,7 +84,7 @@ U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, SCREEN_CS, SCREEN_DC, SCREEN_R
 uint32_t screenTimer = 0;
 
 //wifi settings
-#define WIFI_BUTTON             33
+#define WIFI_BUTTON             34
 #define WIFI_TIMEOUT            60000
 const char* ssid = "FALK-PRE";
 uint32_t wifiButtonPressTime = 0;
@@ -265,7 +268,9 @@ void setup(){
   volEnc.setCount(settings.volume);
 
   //configure the mute button
-  pinMode(MUTE_BUTTON, INPUT_PULLUP);
+  pinMode(MUTE_BUTTON, INPUT);
+  pinMode(MUTE_SET, OUTPUT);
+  pinMode(MUTE_RESET, OUTPUT);
 
   //the relays *should* match our stored values (since they're latching) but we can't be sure
   //so we set them to these values so the screen and relays match
@@ -274,7 +279,8 @@ void setup(){
   updateScreen();
 
   //this is the input rotary encoder button. Needed to handle wifi enable
-  pinMode(WIFI_BUTTON, INPUT_PULLUP);
+  //pinMode(WIFI_BUTTON, INPUT_PULLUP);
+  pinMode(WIFI_BUTTON, INPUT);
 
   //start the screen object
   u8g2.begin();
@@ -353,15 +359,24 @@ void muteHandler(uint32_t m) {
           muteState = 1;
           volEnc.pauseCount();
           updateScreen();
+          digitalWrite(MUTE_SET, 1);
+          MuteRelayPulseTime = millis();
         } else {
           muteState = 0;
           volEnc.resumeCount();
           updateScreen();
+          digitalWrite(MUTE_RESET, 1);
+          MuteRelayPulseTime = millis();
         }
       }
     }
   }
   lastmuteButtonState = reading;
+
+  if ((MuteRelayPulseTime > 0) && (m > MuteRelayPulseTime + RELAY_PULSE)) {
+    digitalWrite(MUTE_SET, 0);
+    digitalWrite(MUTE_RESET, 0);
+  }
 }
 
 void wifiLoop(uint32_t m) {

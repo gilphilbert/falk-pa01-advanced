@@ -1,0 +1,15 @@
+@font-face {
+    font-family: 'Rubrik';
+    src: url('rubrik_1-webfont.woff2') format('woff2'),
+         url('rubrik_1-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Rubrik';
+    src: url('rubrik_semibold_1-webfont.woff2') format('woff2'),
+         url('rubrik_semibold_1-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+
+}
