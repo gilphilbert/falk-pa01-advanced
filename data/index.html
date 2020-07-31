@@ -25,9 +25,6 @@
         .is-centered img {
             margin: 0 auto;
         }
-        .is-right {
-            text-align: right;
-        }
         img.logo {
             width: 25%;
             margin-top: 15px;
@@ -37,11 +34,11 @@
             margin-bottom: 50px;
         }
         .reflect {
-            -webkit-box-reflect:below 2px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.3, transparent), to(white))
+            -webkit-box-reflect:below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.3, transparent), to(white))
         }
         @media (min-width: 40.0rem) {
             .reflect {
-                -webkit-box-reflect:below 2px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.64, transparent), to(white))
+                -webkit-box-reflect:below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.64, transparent), to(white))
             }
             img.logo {
                 width: 150px;
@@ -75,6 +72,23 @@
         .pure-flex-middle {
             margin: auto 0 auto auto;
         }
+        .pure-u-auto, .pure-u-52px {
+            letter-spacing: normal;
+            word-spacing: normal;
+            vertical-align: top;
+            text-rendering: auto;
+        }
+        .pure-u-auto {
+            flex: 1;
+        }
+        .pure-u-52px {
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 55px;
+            text-align: right;
+            display: flex;
+            place-items: center;
+        }
         </style>
     </head>
     <body>
@@ -96,11 +110,11 @@
             <div class="pure-u-1 pure-u-md-1-3">
                 <div class="box">
                     <div class="pure-g">
-                        <div class="pure-u-5-6">
+                        <div class="pure-u-auto">
                             <h2>Input names</h2>
                             <p>Your inputs are names, not numbers!</p>
                         </div>
-                        <div class="pure-u-1-6 pure-flex">
+                        <div class="pure-u-52px pure-flex">
                             <svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div> 
                     </div>
@@ -114,13 +128,13 @@
             <div class="pure-u-1 pure-u-md-1-3">
                 <div class="box">
                     <div class="pure-g">
-                        <div class="pure-u-5-6">
+                        <div class="pure-u-auto">
                             <h2>Dim screen</h2>
                             <p>Screen too bright? Dim automatically after 10s</p>
                         </div>
-                        <div class="pure-u-1-6 pure-flex">
+                        <div class="pure-u-52px pure-flex">
                             <label class="switch pure-flex-middle">
-                                <input type="checkbox">
+                                <input type="checkbox" id="dim-screen">
                                 <span class="slider round"></span>
                             </label>
                         </div> 
@@ -136,11 +150,11 @@
             <div class="pure-u-1 pure-u-md-1-3">
                 <div class="box">
                     <div class="pure-g">
-                        <div class="pure-u-5-6">
+                        <div class="pure-u-auto">
                             <h2>Maximum volume</h2>
                             <p>Protect your equipment (and your ears) by limiting volume</p>
                         </div>
-                        <div class="pure-u-1-6 pure-flex">
+                        <div class="pure-u-52px pure-flex">
                             <svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div> 
                     </div>
@@ -154,11 +168,11 @@
             <div class="pure-u-1 pure-u-md-1-3">
                 <div class="box">
                     <div class="pure-g">
-                        <div class="pure-u-5-6">
+                        <div class="pure-u-auto">
                             <h2>Startup volume</h2>
                             <p>Keep making yourself jump? Set a maximum startup volume</p>
                         </div>
-                        <div class="pure-u-1-6 pure-flex">
+                        <div class="pure-u-52px pure-flex">
                             <svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div> 
                     </div>

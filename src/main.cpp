@@ -8,8 +8,14 @@ To do:
 #include <ESP32Encoder.h>
 #include <driver/gpio.h>
 #include <Wire.h>
+
 #include <Preferences.h>
+
 #include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPmDNS.h>
+#include <Update.h>
+#include <SPIFFS.h>
 
 // for the display
 #include <SPI.h>
@@ -86,11 +92,12 @@ uint32_t screenTimer = 0;
 //wifi settings
 #define WIFI_BUTTON             34
 #define WIFI_TIMEOUT            60000
+#define HOSTNAME                "falk.local"
 const char* ssid = "FALK-PRE";
 uint32_t wifiButtonPressTime = 0;
 uint32_t wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
-WiFiServer server(80);
+AsyncWebServer server(80);
 
 
 //this really configures the two MCP27103s for the correct input/outputs
@@ -108,26 +115,67 @@ void configureRelays() {
   Wire.write(MCP_OUTPUT);  //set to outputs
   Wire.endTransmission();  //kill the connection
 
-  // configure inputs
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   Wire.write(MCP_PORTA);  //select the "A" bank
   Wire.write(MCP_OUTPUT);  //set to outputs
+  Wire.endTransmission();  //kill the connection
 
+  Wire.beginTransmission(MCP_INPUT_ADDRESS);
+  Wire.write(MCP_PORTB);  //select the "A" bank
+  Wire.write(MCP_OUTPUT);  //set to outputs
   Wire.endTransmission();  //kill the connection
 }
 
 void setInputRelays(uint16_t input) {
+  Serial.print("Setting volume to");
+  Serial.println(input);
+  uint8_t setVal = 1;
+  for (uint8_t i = 1; i < input; i++) {
+    setVal = setVal * 2;
+  }
+
+  Serial.println(setVal);
+  //select the volume GPIOs
+  Wire.beginTransmission(MCP_INPUT_ADDRESS);
+  Wire.write(MCP_PORTA_PINS);
+  //Wire.write(setVal);
+  Wire.write(255-setVal); /// <!----------------------------- FOR v1.0 BOARD
+  Wire.endTransmission();  //kill the connection
+
+  Serial.println(255-setVal);
+  Wire.beginTransmission(MCP_INPUT_ADDRESS);
+  Wire.write(MCP_PORTB_PINS);
+  //Wire.write(255 - setVal);
+  Wire.write(setVal); /// <!----------------------------- FOR v1.0 BOARD
+  Wire.endTransmission();  //kill the connection
+  InputRelayPulseTime = millis();
+}
+
+void endInputPulse() {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   //select the "A" bank
-  Wire.write(MCP_PORTA);
-  Wire.write(11100001); //resets relays 1,2,3 and sets relay 4
+  Wire.write(MCP_PORTA_PINS);
+  //set volume
+  Wire.write(0);
+  //kill session
+  Wire.endTransmission();
+  //select the volume GPIOs
+  Wire.beginTransmission(MCP_INPUT_ADDRESS);
+  //select the "B" bank
+  Wire.write(MCP_PORTB_PINS);
+  //set volume
+  Wire.write(0);
+  //kill session
+  Wire.endTransmission();
+  //stop this running again
+  InputRelayPulseTime = 0;
 }
 
 void setVolumeRelays(uint16_t volume) {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank
+  //select the "A" bank pins
   Wire.write(MCP_PORTA_PINS);
   //set volume
   Wire.write(volume);
@@ -135,8 +183,8 @@ void setVolumeRelays(uint16_t volume) {
   Wire.endTransmission();
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank
-  Wire.write(MCP_PORTB);
+  //select the "A" bank pins
+  Wire.write(MCP_PORTB_PINS);
   //set volume
   Wire.write(VOL_MAX - volume);
   //kill session
@@ -147,7 +195,7 @@ void setVolumeRelays(uint16_t volume) {
 void endVolumePulse() {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank
+  //select the "A" bank pins
   Wire.write(MCP_PORTA_PINS);
   //set volume
   Wire.write(0);
@@ -155,8 +203,8 @@ void endVolumePulse() {
   Wire.endTransmission();
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "B" bank
-  Wire.write(MCP_PORTB);
+  //select the "B" bank pins
+  Wire.write(MCP_PORTB_PINS);
   //set volume
   Wire.write(0);
   //kill session
@@ -209,9 +257,18 @@ void dimScreen() {
   screenTimer = 0;
 }
 
+void configureServer() {
+  //configure SPIFFS
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html");
+  });
+}
+
 void enableWifi() {
   WiFi.softAP(ssid);
   IPAddress IP = WiFi.softAPIP();
+  MDNS.begin(HOSTNAME);
+
   Serial.print("AP IP address: ");
   Serial.println(IP);
 
@@ -240,6 +297,7 @@ void enableWifi() {
 
 void setup(){	
 	Serial.begin(9600);
+  Serial.println("Booting...");
   //use the pullup resistors, this means we can connect ground to the encoders
 	ESP32Encoder::useInternalWeakPullResistors=UP;
 
@@ -260,7 +318,7 @@ void setup(){
   }
 
   //configure the input encoder
-  inpEnc.attachHalfQuad(INP_ENCODER_A, INP_ENCODER_B);
+  inpEnc.attachSingleEdge(INP_ENCODER_A, INP_ENCODER_B);
   inpEnc.setCount(settings.input);
 
   //configure the volume encoder
@@ -296,10 +354,14 @@ void inpEncLoop(uint32_t m) {
       count = INP_MAX;
       inpEnc.setCount(INP_MAX);
     }
+    setInputRelays(count);
     settings.input = count;
     updateScreen();
     //set a delayed commit (this prevents us from wearing out the flash with each detent)
     FlashCommit = m;
+  }
+  if ((InputRelayPulseTime > 0) && (m > InputRelayPulseTime + RELAY_PULSE)) {
+    endInputPulse();
   }
 }
 
@@ -385,7 +447,6 @@ void wifiLoop(uint32_t m) {
     Serial.println(reading);
     if (reading == LOW) {
       wifiButtonPressTime = m;
-      //enableWifi();
     } else {
       wifiButtonPressTime = 0;
     }
