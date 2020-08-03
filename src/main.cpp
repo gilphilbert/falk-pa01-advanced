@@ -267,14 +267,15 @@ void configureServer() {
   //  request->send(SPIFFS, "/index.html");
   //});
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
-    shouldReboot = !Update.hasError();
+    bool shouldReboot = !Update.hasError();
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot?"OK":"FAIL");
     response->addHeader("Connection", "close");
     request->send(response);
   },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
-      Update.runAsync(true);
+      //Update.runAsync(true);
+      //Update.begin
       if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
         Update.printError(Serial);
       }
@@ -293,6 +294,8 @@ void configureServer() {
     }
   });
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
+
+  server.begin();
 }
 
 void enableWifi() {
@@ -322,6 +325,8 @@ void enableWifi() {
 
   u8g2.setContrast(255);
   u8g2.sendBuffer();
+
+  configureServer();
 
   wifiConnectTimeout = millis();
 }
