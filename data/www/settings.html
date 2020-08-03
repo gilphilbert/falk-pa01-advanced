@@ -10,86 +10,7 @@
         <link rel="stylesheet" href="pure-min.css">
         <link rel="stylesheet" href="grids-responsive-min.css">
         <link rel="stylesheet" href="switch.css">
-        <style>
-        body {
-            
-            background: #255C99;
-            color: #FCFFFF;
-          }
-        html, button, input, select, textarea, .pure-g [class *= "pure-u"] {
-            font-family: 'Rubrik', serif;
-        }
-        .is-centered {
-            text-align: center;
-        }
-        .is-centered img {
-            margin: 0 auto;
-        }
-        img.logo {
-            width: 25%;
-            margin-top: 15px;
-            margin-bottom: 8px;
-        }
-        img.product {
-            margin-bottom: 50px;
-        }
-        .reflect {
-            -webkit-box-reflect:below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.3, transparent), to(white))
-        }
-        @media (min-width: 40.0rem) {
-            .reflect {
-                -webkit-box-reflect:below 0 -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.64, transparent), to(white))
-            }
-            img.logo {
-                width: 150px;
-            }
-        }
-        .box {
-            /*border: 2px solid white;
-            border-radius: 4px;*/
-            margin: 0 20px 10px 20px;
-            padding: 0 15px;
-            border-bottom: 1px solid #faffff44;
-        }
-        .g .box:last-child {
-            border-bottom: none;
-        }
-        .box h2 {
-            margin-top: 0px;
-            margin-bottom: 6px;
-        }
-        .box p {
-            margin-top: 3px;
-            margin-bottom: 12px;
-        }
-        .box svg.chevron {
-            height: 36px;
-            width: 36px;
-        }
-        .pure-flex {
-            display: flex;
-        }
-        .pure-flex-middle {
-            margin: auto 0 auto auto;
-        }
-        .pure-u-auto, .pure-u-52px {
-            letter-spacing: normal;
-            word-spacing: normal;
-            vertical-align: top;
-            text-rendering: auto;
-        }
-        .pure-u-auto {
-            flex: 1;
-        }
-        .pure-u-52px {
-            flex-grow: 0;
-            flex-shrink: 0;
-            flex-basis: 55px;
-            text-align: right;
-            display: flex;
-            place-items: center;
-        }
-        </style>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div class="pure-g">
@@ -180,7 +101,39 @@
             </div>
             <div class="pure-u-1 pure-u-md-1-3"></div>
         </div>
+
+        <div class="pure-g">
+            <div class="pure-u-1 pure-u-md-1-3"></div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="update-file">
+                <div class="box">
+                    <div class="pure-g is-relative">
+                        <div class="pure-u-auto">
+                            <h2>Firmware update</h2>
+                            <p>Update the device firmware</p>
+                        </div>
+                        <div class="pure-u-52px pure-flex">
+                            <svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </div>
+                        <input type="file" id="update-file" class="is-hidden"></input>
+                    </div>
+                </div>
+                </label>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3"></div>
+        </div>
         
-        
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById("update-file").addEventListener("change", (e) => {
+                console.log(e.srcElement.files[0]);
+                const response = fetch("/update", {
+                    method: 'POST',
+                    body: e.srcElement.files[0]
+                })
+                console.log(response);
+            })
+        })
+    </script>
     </body>
 </html>
