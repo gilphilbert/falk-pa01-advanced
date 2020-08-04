@@ -16,6 +16,8 @@ To do:
 #include <ESPmDNS.h>
 #include <Update.h>
 #include <SPIFFS.h>
+#include "esp_task_wdt.h"
+#include "esp_int_wdt.h"
 
 // for the display
 #include <SPI.h>
@@ -98,6 +100,7 @@ uint32_t wifiButtonPressTime = 0;
 uint32_t wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
 AsyncWebServer server(80);
+bool shouldReboot = false;
 
 
 //this really configures the two MCP27103s for the correct input/outputs
@@ -262,35 +265,36 @@ void configureServer() {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  //configure SPIFFS
-  //server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-  //  request->send(SPIFFS, "/index.html");
-  //});
-  server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
-    bool shouldReboot = !Update.hasError();
+  server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
+    shouldReboot = !Update.hasError();
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot?"OK":"FAIL");
     response->addHeader("Connection", "close");
     request->send(response);
-  },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+  },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
-      //Update.runAsync(true);
-      //Update.begin
-      if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
+      int cmd = (filename == "filesystem") ? U_SPIFFS : U_FLASH;
+      if(!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)){
         Update.printError(Serial);
+        return request->send(200, "text/plain", "OTA could not begin");
       }
     }
     if(!Update.hasError()){
       if(Update.write(data, len) != len){
         Update.printError(Serial);
+        return request->send(200, "text/plain", "OTA could not start");
       }
     }
     if(final){
       if(Update.end(true)){
         Serial.printf("Update Success: %uB\n", index+len);
+        return request->send(200, "text/plain", "Success");
       } else {
         Update.printError(Serial);
+        return request->send(200, "text/plain", "OTA could not end");
       }
+    } else {
+      return;
     }
   });
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
@@ -513,5 +517,13 @@ void loop() {
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
       preferences.putBytes("settings", &settings, sizeof(Settings));
       FlashCommit = 0;
+  }
+  if(shouldReboot) {
+    yield();
+    delay(1000);
+    yield();
+    esp_task_wdt_init(1,true);
+    esp_task_wdt_add(NULL);
+    while(true);
   }
 }
