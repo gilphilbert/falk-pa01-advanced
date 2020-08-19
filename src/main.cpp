@@ -1,9 +1,3 @@
-/*
-To do:
-* Input switching (and resetting)
-* Wifi hotspot (no need to join wifi) or bluetooth app, perhaps
-* Finish documenting
-*/
 #include <Arduino.h>
 #include <ESP32Encoder.h>
 #include <driver/gpio.h>
@@ -24,43 +18,30 @@ To do:
 #include <U8g2lib.h>
 // ^^ \libraries\U8g2\src\clib\u8g2.h <-- uncomment #define U8G2_16BIT
 
+#include "relays.h"
+#include "falk-pre-conf.h"
+
+String fw_version = "0.1";
+
 #define COMMIT_TIMEOUT          400
 
 #define BUTTON_DEBOUNCE_DELAY   50
 #define BUTTON_LONG_PRESS       2000
-#define RELAY_PULSE             50
-
-
-//how to find the two MCP23017s
-#define MCP_PORTA               0x00
-#define MCP_PORTB               0x01
-#define MCP_OUTPUT              0x00
-#define MCP_INPUT               0x01
-
-#define MCP_PORTA_PINS          0x12
-#define MCP_PORTB_PINS          0x13
-
-#define MCP_VOLUME_ADDRESS      0x20
-#define MCP_INPUT_ADDRESS       0x21
 
 Preferences preferences;
+uint32_t FlashCommit = 0;
+
+RelayController relays;
 
 // for the volume rotary encoder
 #define VOL_ENCODER_A           27
 #define VOL_ENCODER_B           14
-#define VOL_MIN                 0
-#define VOL_MAX                 255
 ESP32Encoder volEnc;
-uint32_t VolumeRelayPulseTime = 0;
-uint32_t FlashCommit = 0;
 
 // for the input rotary encoder
 #define INP_ENCODER_A           25
 #define INP_ENCODER_B           26
-#define INP_MIN                 1
-#define INP_MAX                 4
 ESP32Encoder inpEnc;
-uint32_t InputRelayPulseTime = 0;
 
 // to handle mute state
 #define MUTE_BUTTON             35
@@ -101,120 +82,6 @@ uint32_t wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
 AsyncWebServer server(80);
 bool shouldReboot = false;
-
-
-//this really configures the two MCP27103s for the correct input/outputs
-void configureRelays() {
-  Wire.begin();
-
-  // configure volume
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);  //select the first device (volume relays)
-  Wire.write(MCP_PORTA);  //select the "A" bank
-  Wire.write(MCP_OUTPUT);  //set to outputs
-  Wire.endTransmission();  //kill the connection
-
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  Wire.write(MCP_PORTB);  //select the "B" bank
-  Wire.write(MCP_OUTPUT);  //set to outputs
-  Wire.endTransmission();  //kill the connection
-
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  Wire.write(MCP_PORTA);  //select the "A" bank
-  Wire.write(MCP_OUTPUT);  //set to outputs
-  Wire.endTransmission();  //kill the connection
-
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  Wire.write(MCP_PORTB);  //select the "A" bank
-  Wire.write(MCP_OUTPUT);  //set to outputs
-  Wire.endTransmission();  //kill the connection
-}
-
-void setInputRelays(uint16_t input) {
-  Serial.print("Setting volume to");
-  Serial.println(input);
-  uint8_t setVal = 1;
-  for (uint8_t i = 1; i < input; i++) {
-    setVal = setVal * 2;
-  }
-
-  Serial.println(setVal);
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  Wire.write(MCP_PORTA_PINS);
-  //Wire.write(setVal);
-  Wire.write(255-setVal); /// <!----------------------------- FOR v1.0 BOARD
-  Wire.endTransmission();  //kill the connection
-
-  Serial.println(255-setVal);
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  Wire.write(MCP_PORTB_PINS);
-  //Wire.write(255 - setVal);
-  Wire.write(setVal); /// <!----------------------------- FOR v1.0 BOARD
-  Wire.endTransmission();  //kill the connection
-  InputRelayPulseTime = millis();
-}
-
-void endInputPulse() {
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  //select the "A" bank
-  Wire.write(MCP_PORTA_PINS);
-  //set volume
-  Wire.write(0);
-  //kill session
-  Wire.endTransmission();
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_INPUT_ADDRESS);
-  //select the "B" bank
-  Wire.write(MCP_PORTB_PINS);
-  //set volume
-  Wire.write(0);
-  //kill session
-  Wire.endTransmission();
-  //stop this running again
-  InputRelayPulseTime = 0;
-}
-
-void setVolumeRelays(uint16_t volume) {
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank pins
-  Wire.write(MCP_PORTA_PINS);
-  //set volume
-  Wire.write(volume);
-  //kill session
-  Wire.endTransmission();
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank pins
-  Wire.write(MCP_PORTB_PINS);
-  //set volume
-  Wire.write(VOL_MAX - volume);
-  //kill session
-  Wire.endTransmission();
-  VolumeRelayPulseTime = millis();
-}
-
-void endVolumePulse() {
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "A" bank pins
-  Wire.write(MCP_PORTA_PINS);
-  //set volume
-  Wire.write(0);
-  //kill session
-  Wire.endTransmission();
-  //select the volume GPIOs
-  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
-  //select the "B" bank pins
-  Wire.write(MCP_PORTB_PINS);
-  //set volume
-  Wire.write(0);
-  //kill session
-  Wire.endTransmission();
-  //stop this running again
-  VolumeRelayPulseTime = 0;
-}
 
 //function that puts the input and volume on the screen
 void updateScreen() {
@@ -297,6 +164,9 @@ void configureServer() {
       return;
     }
   });
+  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
+    return request->send(200, "text/json", "{ \"ver\" : \"" + fw_version + "\"}");
+  });
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
@@ -332,7 +202,7 @@ void enableWifi() {
 
   configureServer();
 
-  wifiConnectTimeout = millis();
+  //wifiConnectTimeout = millis();
 }
 
 void setup(){	
@@ -342,7 +212,7 @@ void setup(){
 	ESP32Encoder::useInternalWeakPullResistors=UP;
 
   //configure the MCP27013 ICs
-  configureRelays();
+  relays.begin();
 
   //start preferences
   preferences.begin("falk-pre", false);
@@ -372,8 +242,8 @@ void setup(){
 
   //the relays *should* match our stored values (since they're latching) but we can't be sure
   //so we set them to these values so the screen and relays match
-  setVolumeRelays(settings.volume);
-  setInputRelays(settings.input);
+  relays.setVolume(settings.volume);
+  relays.setInput(settings.input);
   updateScreen();
 
   //this is the input rotary encoder button. Needed to handle wifi enable
@@ -384,67 +254,6 @@ void setup(){
   u8g2.begin();
 
   enableWifi();
-}
-
-void inpEncLoop(uint32_t m) {
-  uint16_t count = inpEnc.getCount();
-  if (count != settings.input) {
-    if (count > INP_MAX) {
-      count = INP_MIN;
-      inpEnc.setCount(INP_MIN);
-    } else if (count < INP_MIN) {
-      count = INP_MAX;
-      inpEnc.setCount(INP_MAX);
-    }
-    setInputRelays(count);
-    settings.input = count;
-    updateScreen();
-    //set a delayed commit (this prevents us from wearing out the flash with each detent)
-    FlashCommit = m;
-  }
-  if ((InputRelayPulseTime > 0) && (m > InputRelayPulseTime + RELAY_PULSE)) {
-    endInputPulse();
-  }
-}
-
-/*
-This function gets the current value from the rotary encoder (via the PM library)
-It then checks to see if it's in the correct range and sets it to the min/max if it's outside the boundaries.
-We also update the pulse counter since we want to catch the next rotation
-Finally, if the value really has changed, we call a function to set the relays, upddate the screen and save the new volume level
-*/
-void volEncLoop(uint32_t m) {
-  //gets the current volume, checks to see if it's changed and sets the new volume
-  uint16_t count = volEnc.getCount();
-  if (count != settings.volume) {
-    //if we're outside the limts, override with the limits
-    if (count > VOL_MAX) {
-      //restore back to the maximum volume
-      volEnc.setCount(VOL_MAX);
-      count = VOL_MAX;
-    } else if (count < VOL_MIN) {
-      //restore back to the minimum volume
-      volEnc.setCount(VOL_MIN);
-      count = VOL_MIN;
-    }
-    //check again (in case we reset to be inside the limits)
-    if (count != settings.volume) {
-      //save the new volume
-      settings.volume = count;
-      //write to the screen
-      updateScreen();
-      //set the relays
-      setVolumeRelays(count);
-      //set a delayed commit (this prevents us from wearing out the flash with each detent)
-      FlashCommit = m;
-    } else {
-      //just save the new volume
-      settings.volume = count;
-    }
-  }
-  if ((VolumeRelayPulseTime > 0) && (m > VolumeRelayPulseTime + RELAY_PULSE)) {
-    endVolumePulse();
-  }
 }
 
 void muteHandler(uint32_t m) {
@@ -505,12 +314,61 @@ void wifiLoop(uint32_t m) {
   }
 }
 
-void loop() {
-  uint32_t m = millis();
+void inputLoop(int m) {
+  uint16_t count = inpEnc.getCount();
+  if (count != settings.input) {
+    if (count > INP_MAX) {
+      count = INP_MIN;
+      inpEnc.setCount(INP_MIN);
+    } else if (count < INP_MIN) {
+      count = INP_MAX;
+      inpEnc.setCount(INP_MAX);
+    }
+    relays.setInput(count);
+    settings.input = count;
+    updateScreen();
+    //set a delayed commit (this prevents us from wearing out the flash with each detent)
+    FlashCommit = m;
+  }
+}
 
-  volEncLoop(m);
+void volumeLoop(int m) {
+  //gets the current volume, checks to see if it's changed and sets the new volume
+  uint16_t count = volEnc.getCount();
+  if (count != settings.volume) {
+    //if we're outside the limts, override with the limits
+    if (count > VOL_MAX) {
+      //restore back to the maximum volume
+      volEnc.setCount(VOL_MAX);
+      count = VOL_MAX;
+    } else if (count < VOL_MIN) {
+      //restore back to the minimum volume
+      volEnc.setCount(VOL_MIN);
+      count = VOL_MIN;
+    }
+    //check again (in case we reset to be inside the limits)
+    if (count != settings.volume) {
+      //save the new volume
+      settings.volume = count;
+      //write to the screen
+      updateScreen();
+      //set the relays
+      relays.setVolume(count);
+      //set a delayed commit (this prevents us from wearing out the flash with each detent)
+      FlashCommit = m;
+    } else {
+      //just save the new volume
+      settings.volume = count;
+    }
+  }
+}
+
+void loop() {
+  int m = millis();
+
+  inputLoop(m);
+  volumeLoop(m);
   muteHandler(m);
-  inpEncLoop(m);
   wifiLoop(m);
 
   if ((screenTimer > 0) && (m > screenTimer + SCREEN_TIMEOUT)) {
@@ -528,4 +386,5 @@ void loop() {
     esp_task_wdt_add(NULL);
     while(true);
   }
+  relays.loop();
 }

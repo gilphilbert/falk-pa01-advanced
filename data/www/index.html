@@ -11,8 +11,10 @@
         <link rel="stylesheet" href="grids-responsive-min.css">
         <link rel="stylesheet" href="switch.css">
         <link rel="stylesheet" href="style.css">
+        <script src="crel.min.js"></script>
     </head>
     <body>
+
         <div class="pure-g">
             <div class="pure-u-1 pure-u-md-1-3"></div>
             <div class="pure-u-1 pure-u-md-1-3 is-centered">
@@ -26,55 +28,223 @@
             </div>
         </div>
 
-        <div class="pure-g">
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-            <div class="pure-u-1 pure-u-md-1-3">
-                <div class="box">
-                    <h2>Volume</h2>
-                    <div class="volume-container"></div>
-                        <input type="range" min="1" max="100" value="50" class="volume" id="volume">
-                    </div>
-                </div>
-            </div>
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-        </div>
+    <div id="app"></div>
 
-        <div class="pure-g">
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-            <div class="pure-u-1 pure-u-md-1-3">
-                <div class="box">
-                    <h2>Input</h2>
-                    <div class="pure-g 4is-centered">
-                        <div class="pure-u-1-4">Input 1</div>
-                        <div class="pure-u-1-4">Input 2</div>
-                        <div class="pure-u-1-4">Input 3</div>
-                        <div class="pure-u-1-4">Input 4</div>
-                    </div>
-                </div>
-            </div>
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-        </div>
-
-        <div class="pure-g">
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-            <div class="pure-u-1 pure-u-md-1-3">
-                <a href="settings.html">
-                <div class="box">
-                    <div class="pure-g">
-                        <div class="pure-u-auto">
-                            <h2>Settings</h2>
-                            <p>Change input names, set volumes and update firmware</p>
-                        </div>
-                        <div class="pure-u-52px pure-flex">
-                            <svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div> 
-                    </div>
-                </div>
-                </a>
-            </div>
-            <div class="pure-u-1 pure-u-md-1-3"></div>
-        </div>
-        
-        
     </body>
+    <script>
+      let cr = crel.proxy;
+
+      function getContent(fragmentId, callback){
+        var pages = {
+          main: cr.div(
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class: "box" },
+                  cr.h2("Volume"),
+                  cr.div({ class: "volume-container" },
+                    cr.input({ type: "range", min: "1", max: "100", value: "50", class: "volume", id: "volume" })
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" })
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class:"box" },
+                  cr.h2("Input"),
+                  cr.div({ class: "pure-g is-centered" },
+                    cr.div({ class: "pure-u-1-4"}, "Input 1"),
+                    cr.div({ class: "pure-u-1-4"}, "Input 2"),
+                    cr.div({ class: "pure-u-1-4"}, "Input 3"),
+                    cr.div({ class: "pure-u-1-4"}, "Input 4")
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" })
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.a({ href: "#settings" },
+                  cr.div({ class: "box" },
+                    cr.div({ class: "pure-g" },
+                      cr.div({ class: "pure-u-auto"},
+                        cr.h2("Settings"),
+                        cr.p("Change input names, set volumes and update firmware")
+                      ),
+                      cr.div({ class: "pure-u-52px pure-flex" },
+                        //<svg class="chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                      )
+                    )
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+            )
+          ),
+          settings: cr.div(
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class: "box" },
+                  cr.div({ class: "pure-g" },
+                    cr.div({ class: "pure-u-auto" },
+                      cr.h2("Input names"),
+                      cr.p("Your inputs are names, not numbers!")
+                    ),
+                    cr.div({ class: "pure-u-52px pure-flex" },
+  //                    svg class: "chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    )
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class: "box" },
+                  cr.div({ class: "pure-g" },
+                    cr.div({ class: "pure-u-auto" },
+                      cr.h2("Dim screen"),
+                      cr.p("Screen too bright? Dim automatically after 10s")
+                    ),
+                    cr.div({ class: "pure-u-52px pure-flex" },
+                      cr.label({ class: "switch pure-flex-middle" },
+                        cr.input({ type: "checkbox", id: "dim-screen"}),
+                        cr.span({ class: "slider round" })
+                      )
+                    ) 
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class: "box" },
+                  cr.div({ class: "pure-g" },
+                    cr.div({ class: "pure-u-auto" },
+                      cr.h2("Maximum volume"),
+                      cr.p("Protect your equipment (and your ears) by limiting volume")
+                    ),
+                    cr.div({ class: "pure-u-52px pure-flex" },
+  //                            <svg class: "chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    ) 
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" })
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.div({ class: "box" },
+                  cr.div({ class: "pure-g" },
+                    cr.div({ class: "pure-u-auto" },
+                      cr.h2("Startup volume"),
+                      cr.p("Keep making yourself jump? Set a maximum startup volume")
+                    ),
+                    cr.div({ class: "pure-u-52px pure-flex" },
+//                            <svg class: "chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    )
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" })
+            ),
+            cr.div({ class: "pure-g" },
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" }),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" },
+                cr.label({ for: "update-file" },
+                  cr.div({ class: "box" },
+                    cr.div({ class: "pure-g is-relative" },
+                      cr.div({ class: "pure-u-auto" },
+                        cr.h2("Firmware update"),
+                        cr.p("Update the device firmware")
+                      ),
+                      cr.div({ class: "pure-u-52px pure-flex" },
+//                          <svg class: "chevron pure-flex-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                      ),
+                      cr.input({ type: "file", id: "update-file", class: "is-hidden" })
+                    )
+                  )
+                )
+              ),
+              cr.div({ class: "pure-u-1 pure-u-md-1-3" })
+            )
+          ),
+          firmware: cr.p("Firmware details and update screen")
+        };
+
+        callback(pages[fragmentId])
+      }
+
+      function loadContent(){
+        var contentDiv = document.getElementById("app"),
+            fragmentId = location.hash.substr(1)
+
+        getContent(fragmentId, function (content) {
+          contentDiv.childNodes.forEach((v) => {
+            v.remove();
+          })
+          contentDiv.appendChild(content);
+        });
+      }
+
+      var OTASuccess = false;
+      var OTAError = false;
+      var uploading = false;
+      var progress = -1;
+      function uploadOTA(event) {
+        this.uploading = true;
+        const formData = new FormData();
+        if(event !== null){
+          this.file = event.target.files[0];
+        }
+        formData.append(this.type, this.file, this.type);
+        const request = new XMLHttpRequest();
+        request.addEventListener('load', () => {
+          // request.response will hold the response from the server
+          if (request.status === 200) {
+          OTASuccess = true;
+          } else if (request.status !== 500) {
+          OTAError = `[HTTP ERROR] ${request.statusText}`;
+          } else {
+          OTAError = request.responseText;
+          }
+          uploading = false;
+          progress = 0;
+          console.log("here");
+          console.log(OTAError);
+        });
+        // Upload progress
+        request.upload.addEventListener('progress', (e) => {
+          progress = Math.trunc((e.loaded / e.total) * 100);
+          console.log(progress);
+        });
+        request.open('post', '/update');
+        request.send(formData);
+      }
+
+      window.addEventListener("DOMContentLoaded", (event) => {
+
+        if(!location.hash) {
+          location.hash = "#main"
+        }
+
+        loadContent()
+
+        window.addEventListener("hashchange", loadContent)
+
+        document.getElementById("update-file").addEventListener("change", (e) => {
+          e.preventDefault();
+          uploadOTA(e);
+        })
+
+    })
+    </script>
 </html>
