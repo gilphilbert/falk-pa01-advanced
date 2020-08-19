@@ -73,8 +73,8 @@ unsigned long muteDebounceTime = 0;
 uint32_t MuteRelayPulseTime = 0;
 
 typedef struct {
-  uint16_t volume = 26;
-  uint16_t input = 1;
+  int16_t volume = 26;
+  int16_t input = 1;
   String inputNames [INP_MAX];
   uint16_t saved = 0;
   uint8_t dim = 1;
@@ -382,6 +382,8 @@ void setup(){
 
   //start the screen object
   u8g2.begin();
+
+  enableWifi();
 }
 
 void inpEncLoop(uint32_t m) {
