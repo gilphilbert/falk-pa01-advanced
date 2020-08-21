@@ -164,9 +164,25 @@ void configureServer() {
       return;
     }
   });
-  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
-    return request->send(200, "text/json", "{ \"ver\" : \"" + fw_version + "\"}");
+
+  // API CONTENT
+  server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
+    return request->send(200, "application/json", "{ \"volume\" : \"" + settings.volume + "\"}");
   });
+  server.on("/api/volume", HTTP_POST, [&](AsyncWebServerRequest *request){
+    if(request->hasParam("value", true))
+      AsyncWebParameter* param = request->getParam("value", -1);
+      settings.volume = (int) param->value();
+      relays.setVolume(settings.volume);
+    return request->send(200, "application/json", "{ \"volume\" : \"" + settings.volume + "\"}");
+  });
+  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
+    File appFile = SPIFFS.open("/version.txt", "r");
+    String app_version = appFile.readString();
+    return request->send(200, "application/json", "{ \"ver\" : \"" + fw_version + "\", \"app\" : \"" + app_version + "\"}");
+  });
+
+
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
