@@ -12,6 +12,7 @@
 #include <SPIFFS.h>
 #include "esp_task_wdt.h"
 #include "esp_int_wdt.h"
+#include "Arduino_JSON.h"
 
 // for the display
 #include <SPI.h>
@@ -21,7 +22,7 @@
 #include "relays.h"
 #include "falk-pre-conf.h"
 
-String fw_version = "0.1";
+String fw_version = "0.1.5";
 
 #define COMMIT_TIMEOUT          400
 
@@ -140,7 +141,7 @@ void configureServer() {
   },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
-      int cmd = (filename == "filesystem") ? U_SPIFFS : U_FLASH;
+      int cmd = (filename == "spiffs.bin") ? U_SPIFFS : U_FLASH;
       if(!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)){
         Update.printError(Serial);
         return request->send(200, "text/plain", "OTA could not begin");
@@ -166,20 +167,48 @@ void configureServer() {
   });
 
   // API CONTENT
+  server.on("/api/dashboard", HTTP_GET, [&](AsyncWebServerRequest *request){
+    JSONVar volObj;
+    volObj["max"] = VOL_MAX;
+    volObj["current"] = settings.volume;
+    JSONVar retObj;
+    retObj["volume"] = volObj;
+    //things to return:
+    // volume (max, current)
+    // list of inputs, selected input
+    // settings?
+    String retStr = JSON.stringify(retObj);
+    return request->send(200, "application/json", retStr);
+  });
   server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
-    return request->send(200, "application/json", "{ \"volume\" : \"" + settings.volume + "\"}");
+    JSONVar retObj;
+    retObj["max"] = VOL_MAX;
+    retObj["current"] = settings.volume;
+    String retStr = JSON.stringify(retObj);
+    return request->send(200, "application/json", retStr);
   });
   server.on("/api/volume", HTTP_POST, [&](AsyncWebServerRequest *request){
-    if(request->hasParam("value", true))
-      AsyncWebParameter* param = request->getParam("value", -1);
-      settings.volume = (int) param->value();
+    if(request->hasParam("value", true)) {
+      AsyncWebParameter* rawJSON = request->getParam("data", -1);
+      JSONVar jsnObj = JSON.parse((const char*) rawJSON);
+      settings.volume = (int) jsnObj["volume"];
       relays.setVolume(settings.volume);
-    return request->send(200, "application/json", "{ \"volume\" : \"" + settings.volume + "\"}");
+    }
+    JSONVar retObj;
+    retObj["max"] = VOL_MAX;
+    retObj["current"] = settings.volume;
+    String retStr = JSON.stringify(retObj);
+    return request->send(200, "application/json", retStr);
   });
   server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
-    File appFile = SPIFFS.open("/version.txt", "r");
+    File appFile = SPIFFS.open("/version", "r");
     String app_version = appFile.readString();
-    return request->send(200, "application/json", "{ \"ver\" : \"" + fw_version + "\", \"app\" : \"" + app_version + "\"}");
+    app_version = app_version.substring(0, app_version.length() -1);
+    JSONVar retObj;
+    retObj["fw"] = fw_version;
+    retObj["app"] = app_version;
+    String retStr = JSON.stringify(retObj);
+    return request->send(200, "application/json", retStr);
   });
 
 

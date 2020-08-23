@@ -136,7 +136,7 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'box' },
             cr.h2('Firmware version'),
             cr.p('Firmware: ', cr.span({ id: 'firmware-version' })),
-            cr.p('Application: ')
+            cr.p('Application: ', cr.span({ id: 'application-version' }))
           )
         )
       ),

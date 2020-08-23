@@ -22,7 +22,8 @@ function loadContent () {
         window.fetch('/api/firmware')
           .then(response => response.json())
           .then(data => {
-            document.getElementById('firmware-version').innerText = data.ver
+            document.getElementById('firmware-version').innerText = data.fw
+            document.getElementById('application-version').innerText = data.app
           })
         break
     }
