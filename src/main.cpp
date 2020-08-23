@@ -1,3 +1,11 @@
+/*
+TO DO:
+* Find out why volume drops from 0% to 100%
+* Split webserver to dedicated class
+* Update UI
+* Fix API-based volume (probably something in JSON or casting to int)
+*/
+
 #include <Arduino.h>
 #include <ESP32Encoder.h>
 #include <driver/gpio.h>
