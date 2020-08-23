@@ -147,12 +147,11 @@ function getContent(fragmentId, callback) {
               cr.div({ class: 'row middle-xs' },
                 cr.div({ class: 'col-xs' },
                   cr.h2('Firmware update'),
-                  cr.p('Update the device firmware')
-                ),
-                cr.div({ class: 'col-xs fixed-52' }
-                // <svg class: 'chevron pure-flex-middle-xs' xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>
-                ),
-                cr.input({ type: 'file', id: 'update-file', class: 'is-hidden', on: { change: (e) => { uploadOTA(e) } } })
+                  cr.p('Update the device firmware'),
+                  cr.progress({ id: 'update-progress', max: 100, min: 0, value: 0 }),
+                  cr.input({ type: 'file', id: 'update-file', class: 'is-hidden', on: { change: (e) => { uploadOTA(e) } } }),
+                  cr.p({ id: 'update-success', class: 'is-hidden' }, 'Firmware updated sucessfully')
+                )
               )
             )
           )

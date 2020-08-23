@@ -14,7 +14,9 @@ function loadContent () {
         window.fetch('/api/status')
           .then(response => response.json())
           .then(data => {
-            document.getElementById('volume').value = data.volume
+            //document.getElementById('volume').value = Math.round((data.volume.current / data.volume.max) * 100)
+            document.getElementById('volume').max = data.volume.max
+            document.getElementById('volume').value = data.volume.current
             console.log(data)
           })
         break
@@ -31,18 +33,18 @@ function loadContent () {
 }
 
 function volumeChange(e) {
-  console.log(e.target.value)
-  window.fetch('/api/firmware', { method: 'POST', body: e.target.value })
+  console.log("Goal::" + e.target.value)
+  body = {
+    volume: e.target.value
+  }
+  window.fetch('/api/volume', { method: 'POST', body: JSON.stringify(body) })
     .then(response => response.json())
     .then(data => {
-      console.log(data.volume)
+      console.log(data)
     })
 }
-
-var OTASuccess = false
-var OTAError = false
+//var progress = -1
 var uploading = false
-var progress = -1
 function uploadOTA (event) {
   this.uploading = true
   const formData = new FormData()
@@ -52,6 +54,8 @@ function uploadOTA (event) {
   formData.append(this.type, this.file, this.type)
   const request = new XMLHttpRequest()
   request.addEventListener('load', () => {
+    var OTASuccess = false
+    var OTAError = false
     // request.response will hold the response from the server
     if (request.status === 200) {
       OTASuccess = true
@@ -61,14 +65,17 @@ function uploadOTA (event) {
       OTAError = request.responseText
     }
     uploading = false
-    progress = 0
-    console.log('here')
-    console.log(OTAError)
+    //progress = 0
+    if (OTASuccess == true) {
+      document.getElementById('update-success').classList.remove('is-hidden');
+    } else {
+      console.log(OTAError)
+    }
   })
   // Upload progress
   request.upload.addEventListener('progress', (e) => {
-    progress = Math.trunc((e.loaded / e.total) * 100)
-    console.log(progress)
+    var progress = Math.trunc((e.loaded / e.total) * 100)
+    document.getElementById('update-progress').value = progress
   })
   request.open('post', '/update')
   request.send(formData)
