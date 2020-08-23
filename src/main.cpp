@@ -3,7 +3,7 @@ TO DO:
 * Find out why volume drops from 0% to 100%
 * Split webserver to dedicated class
 * Update UI
-* Fix API-based volume (probably something in JSON or casting to int)
+* Fix API-based volume (probably something in JSON or casting to)
 */
 
 #include <Arduino.h>
@@ -22,6 +22,7 @@ TO DO:
 #include "esp_task_wdt.h"
 #include "esp_int_wdt.h"
 #include "Arduino_JSON.h"
+#include "ArduinoJson.h"
 
 
 // OUR SYSTEM CONFIGURATION
