@@ -59,4 +59,6 @@ typedef struct {
   uint8_t dim = 1;
 } Settings;
 
+extern Settings sysSettings;
+
 #endif
