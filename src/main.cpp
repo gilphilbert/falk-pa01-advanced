@@ -7,7 +7,7 @@ TO DO:
 */
 
 #include <Arduino.h>
-#include <ESP32Encoder.h>
+#include "ESP32Encoder.h"
 #include <driver/gpio.h>
 #include <Wire.h>
 
@@ -15,7 +15,7 @@ TO DO:
 
 // THIS BLOCK NEEDED FOR WIFI / OTA UPDATES
 #include <WiFi.h>
-#include <ESPAsyncWebServer.h>
+#include "ESPAsyncWebServer.h"
 #include <ESPmDNS.h>
 #include <Update.h>
 #include <SPIFFS.h>
@@ -28,7 +28,7 @@ TO DO:
 #include "falk-pre-conf.h"
 
 // FIRMWARE VERSION (THIS SW)
-String fw_version = "0.1.15";
+String fw_version = "0.1.16";
 
 // OTHER INTERNAL CLASSES
 #include "relays.h"
