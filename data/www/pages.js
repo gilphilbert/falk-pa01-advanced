@@ -8,7 +8,7 @@ function getContent(fragmentId, callback) {
   var pages = {
     main: cr.div(
       cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
           cr.div({ class: 'box' },
             cr.h2('Volume'),
             cr.div({ class: 'volume-container' },
@@ -18,35 +18,29 @@ function getContent(fragmentId, callback) {
         )
       ),
       cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
           cr.div({ class: 'box' },
             cr.h2('Input'),
-            cr.div({ class: 'row middle-xs is-centered' },
-              cr.div({ class: 'col-lg-3' }, 'Input 1'),
-              cr.div({ class: 'col-lg-3' }, 'Input 2'),
-              cr.div({ class: 'col-lg-3' }, 'Input 3'),
-              cr.div({ class: 'col-lg-3' }, 'Input 4')
+            cr.div({ class: 'row middle-xs center-xs' },
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 1')),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 2')),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 3')),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 4'))
             )
           )
         )
       ),
       cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
-          cr.a({ href: '#settings' },
-            cr.div({ class: 'box' },
-              cr.div({ class: 'row middle-xs' },
-                cr.div({ class: 'col-xs' },
-                  cr.h2('Settings'),
-                  cr.p('Change input names, set volumes and update firmware')
-                ),
-                cr.div({ class: 'col-xs fixed-52' }
-                  // <svg class='chevron pure-flex-middle-xs' xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>
-                )
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
+          cr.div({ class: 'box' },
+            cr.a({ href: '#settings' },
+              cr.h2('Settings'),
+              cr.div({ class: 'row middle-xs center-xs' }
               )
             )
           )
         )
-      )
+      ),
     ),
     settings: cr.div(
       cr.div({ class: 'row' },
@@ -148,7 +142,7 @@ function getContent(fragmentId, callback) {
                 cr.div({ class: 'col-xs' },
                   cr.h2('Firmware update'),
                   cr.p('Update the device firmware'),
-                  cr.progress({ id: 'update-progress', max: 100, min: 0, value: 0 }),
+                  cr.progress({ id: 'update-progress', class: 'is-hidden', max: 100, min: 0, value: 0 }),
                   cr.input({ type: 'file', id: 'update-file', class: 'is-hidden', on: { change: (e) => { uploadOTA(e) } } }),
                   cr.p({ id: 'update-success', class: 'is-hidden' }, 'Firmware updated sucessfully')
                 )

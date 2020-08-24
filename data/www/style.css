@@ -1,16 +1,18 @@
 body {         
-  background: #255C99;
+  background: #1B1F23;
   color: #FCFFFF;
+  font-size: 16px;
 }
-html, button, input, select, textarea, .pure-g [class *= "pure-u"] {
+html, button, input, select, textarea {
   font-family: 'Rubrik', serif;
+  font-weight: lighter;
+}
+h1,h2,h3,h4,h5,h6 {
+  font-weight: normal;
 }
 a {
   color: inherit;
   text-decoration: none;
-}
-.is-centered {
-  text-align: center;
 }
 .is-centered img {
   margin: 0 auto;
@@ -22,19 +24,18 @@ a {
   display: none;
 }
 img.logo {
-  width: 25%;
+  width: 45px;
   margin-top: 15px;
   margin-bottom: 8px;
 }
-@media (min-width: 40.0rem) {
+@media (min-width: 768px) {
   img.logo {
-      width: 150px;
+      width: 90px;
   }
 }
 .box {
-  margin: 0 20px 10px 20px;
-  padding: 0 15px;
-  border-bottom: 1px solid #faffff44;
+  margin: 10px 20px;
+  /*padding: 0 15px;*/
 }
 .box h2 {
   margin-top: 0px;
@@ -50,32 +51,46 @@ img.logo {
 }
 
 .volume-container {
-  width: 100%;
+  width: 65%;
 }
 .volume {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 10px;
-  background: #faffff44;
+  height: 6px;
+  background: #255C99;
   border-radius: 40000px;
   outline: none;
   cursor: pointer;
-  margin: 20px 0;
 }
 .volume::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #ffffff;
+  width: 12px;
+  height: 12px;
+  background: #FCFFFF;
   border-radius: 100%;
   cursor: pointer;
 }
 .volume::-moz-range-thumb {
-  width: 25px;
-  height: 25px;
-  background: #ffffff;
+  width: 12px;
+  height: 12px;
+  background: #FCFFFF;
   border-radius: 100%;
   cursor: pointer;
+}
+.input-box {
+  background: #255C99;
+  color: #FCFFFF;
+  border-radius: 4px;
+  padding: 12px 6px;
+  font-size: 14px;
+}
+figure {
+  margin: 0;
+}
+@media (min-width: 768px) {
+  figure {
+      margin: 40px 0;
+  }
 }

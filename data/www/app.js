@@ -46,6 +46,7 @@ function volumeChange(e) {
 //var progress = -1
 var uploading = false
 function uploadOTA (event) {
+  document.getElementById('update-progress').classList.remove('is-hidden')
   this.uploading = true
   const formData = new FormData()
   if (event !== null) {
