@@ -21,7 +21,6 @@ TO DO:
 #include <SPIFFS.h>
 #include "esp_task_wdt.h"
 #include "esp_int_wdt.h"
-#include "Arduino_JSON.h"
 #include "ArduinoJson.h"
 
 
@@ -29,9 +28,7 @@ TO DO:
 #include "falk-pre-conf.h"
 
 // FIRMWARE VERSION (THIS SW)
-String fw_version = "0.1.11";
-
-Settings settings;
+String fw_version = "0.1.15";
 
 // OTHER INTERNAL CLASSES
 #include "relays.h"
@@ -68,6 +65,89 @@ void configureServer() {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
+
+  // API CONTENT
+  server.on("/api/status", HTTP_GET, [&](AsyncWebServerRequest *request){
+    // create a JSON object for the response
+    StaticJsonDocument<200> doc;
+    JsonObject retObj = doc.to<JsonObject>();
+
+    //generate the volume object
+    JsonObject volObj = retObj.createNestedObject("volume");
+    volObj["max"] = VOL_MAX;
+    volObj["current"] = sysSettings.volume;
+    
+    //generate the inputs object
+    JsonObject inpObj = retObj.createNestedObject("inputs");
+    inpObj["selected"] = sysSettings.input;
+    JsonArray inpList = inpObj.createNestedArray("list");
+    for (int i = 0; i < INP_MAX; i++) {
+      inpList.add(sysSettings.inputNames[i]);
+    }
+    //things to return:
+    // settings?
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    //return the request
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
+    // create a JSON object for the response
+    StaticJsonDocument<200> doc;
+    JsonObject retObj = doc.to<JsonObject>();
+
+    // write the volume variables
+    retObj["max"] = VOL_MAX;
+    retObj["current"] = sysSettings.volume;
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+  server.on("/api/volume", HTTP_POST, [](AsyncWebServerRequest *request){
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, data);
+    if (doc.containsKey("volume")) {
+      int vol = doc["volume"];
+      sysSettings.volume = vol;
+      relays.setVolume(sysSettings.volume);
+    }
+    // create a JSON object for the response
+    doc.clear();
+    JsonObject retObj = doc.to<JsonObject>();
+
+    retObj["max"] = VOL_MAX;
+    retObj["current"] = sysSettings.volume;
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
+    File appFile = SPIFFS.open("/version", "r");
+    String app_version = appFile.readString();
+    app_version = app_version.substring(0, app_version.length() -1);
+    
+    // create a JSON object for the response
+    StaticJsonDocument<200> doc;
+    JsonObject retObj = doc.to<JsonObject>();
+    retObj["fw"] = fw_version;
+    retObj["app"] = app_version;
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+  
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
     shouldReboot = !Update.hasError();
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot?"OK":"FAIL");
@@ -99,60 +179,6 @@ void configureServer() {
     } else {
       return;
     }
-  });
-
-  // API CONTENT
-  server.on("/api/status", HTTP_GET, [&](AsyncWebServerRequest *request){
-    JSONVar retObj;
-
-    JSONVar volObj;
-    volObj["max"] = VOL_MAX;
-    volObj["current"] = settings.volume;
-    retObj["volume"] = volObj;
-    
-    JSONVar inpObj;
-    JSONVar inpList;
-    for (int i = 0; i < INP_MAX; i++) {
-      inpList[i] = settings.inputNames[i];
-    }
-    inpObj["list"] = inpList;
-    inpObj["selected"] = settings.input;
-    retObj["inputs"] = inpObj;
-    //things to return:
-    // settings?
-    String retStr = JSON.stringify(retObj);
-    return request->send(200, "application/json", retStr);
-  });
-  server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
-    JSONVar retObj;
-    retObj["max"] = VOL_MAX;
-    retObj["current"] = settings.volume;
-    String retStr = JSON.stringify(retObj);
-    return request->send(200, "application/json", retStr);
-  });
-  server.on("/api/volume", HTTP_POST, [](AsyncWebServerRequest *request){
-    // handle the instance where no data is provided
-  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
-    JSONVar jsnObj = JSON.parse((const char*) data);
-    if (jsnObj.hasOwnProperty("volume")) {
-      settings.volume = (int) jsnObj["volume"];
-      relays.setVolume(settings.volume);
-    }
-    JSONVar retObj;
-    retObj["max"] = VOL_MAX;
-    retObj["current"] = settings.volume;
-    String retStr = JSON.stringify(retObj);
-    return request->send(200, "application/json", retStr);
-  });
-  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
-    File appFile = SPIFFS.open("/version", "r");
-    String app_version = appFile.readString();
-    app_version = app_version.substring(0, app_version.length() -1);
-    JSONVar retObj;
-    retObj["fw"] = fw_version;
-    retObj["app"] = app_version;
-    String retStr = JSON.stringify(retObj);
-    return request->send(200, "application/json", retStr);
   });
 
 
@@ -193,23 +219,23 @@ void setup(){
   //start preferences
   preferences.begin("falk-pre", false);
   //preferences.clear();
-  preferences.getBytes("settings", &settings, sizeof(Settings));
+  preferences.getBytes("settings", &sysSettings, sizeof(Settings));
 
   //add some default values if this is our first boot
-  if (settings.saved == 0) {
-    settings.saved = 1;
+  if (sysSettings.saved == 0) {
+    sysSettings.saved = 1;
     for (int i = 0; i < INP_MAX; i++) {
-      settings.inputNames[i] = "Input " + (String)(i+1);
+      sysSettings.inputNames[i] = "Input " + (String)(i+1);
     }
   }
 
   //configure the input encoder
   inpEnc.attachSingleEdge(INP_ENCODER_A, INP_ENCODER_B);
-  inpEnc.setCount(settings.input);
+  inpEnc.setCount(sysSettings.input);
 
   //configure the volume encoder
 	volEnc.attachFullQuad(VOL_ENCODER_A, VOL_ENCODER_B);
-  volEnc.setCount(settings.volume);
+  volEnc.setCount(sysSettings.volume);
 
   //configure the mute button
   pinMode(MUTE_BUTTON, INPUT);
@@ -218,11 +244,11 @@ void setup(){
 
   //the relays *should* match our stored values (since they're latching) but we can't be sure
   //so we set them to these values so the screen and relays match
-  relays.setVolume(settings.volume);
-  relays.setInput(settings.input);
+  relays.setVolume(sysSettings.volume);
+  relays.setInput(sysSettings.input);
 
   display.begin();
-  display.updateScreen(settings, muteState);
+  display.updateScreen(muteState);
 
   //this is the input rotary encoder button. Needed to handle wifi enable
   //pinMode(WIFI_BUTTON, INPUT_PULLUP);
@@ -246,13 +272,13 @@ void muteHandler(uint32_t m) {
         if (muteState == 0) {
           muteState = 1;
           volEnc.pauseCount();
-          display.updateScreen(settings, muteState);
+          display.updateScreen(muteState);
           digitalWrite(MUTE_SET, 1);
           MuteRelayPulseTime = millis();
         } else {
           muteState = 0;
           volEnc.resumeCount();
-          display.updateScreen(settings, muteState);
+          display.updateScreen(muteState);
           digitalWrite(MUTE_RESET, 1);
           MuteRelayPulseTime = millis();
         }
@@ -285,13 +311,13 @@ void wifiLoop(uint32_t m) {
   if ((wifiConnectTimeout > 0) && (m > wifiConnectTimeout + WIFI_TIMEOUT)) {
     wifiConnectTimeout = 0;
     WiFi.mode(WIFI_MODE_STA);
-    display.updateScreen(settings, muteState);
+    display.updateScreen(muteState);
   }
 }
 
 void inputLoop(int m) {
   uint16_t count = inpEnc.getCount();
-  if (count != settings.input) {
+  if (count != sysSettings.input) {
     if (count > INP_MAX) {
       count = INP_MIN;
       inpEnc.setCount(INP_MIN);
@@ -300,8 +326,8 @@ void inputLoop(int m) {
       inpEnc.setCount(INP_MAX);
     }
     relays.setInput(count);
-    settings.input = count;
-    display.updateScreen(settings, muteState);
+    sysSettings.input = count;
+    display.updateScreen(muteState);
     //set a delayed commit (this prevents us from wearing out the flash with each detent)
     FlashCommit = m;
   }
@@ -310,7 +336,7 @@ void inputLoop(int m) {
 void volumeLoop(int m) {
   //gets the current volume, checks to see if it's changed and sets the new volume
   uint16_t count = volEnc.getCount();
-  if (count != settings.volume) {
+  if (count != sysSettings.volume) {
     //if we're outside the limts, override with the limits
     if (count > VOL_MAX) {
       //restore back to the maximum volume
@@ -322,18 +348,18 @@ void volumeLoop(int m) {
       count = VOL_MIN;
     }
     //check again (in case we reset to be inside the limits)
-    if (count != settings.volume) {
+    if (count != sysSettings.volume) {
       //save the new volume
-      settings.volume = count;
+      sysSettings.volume = count;
       //write to the screen
-      display.updateScreen(settings, muteState);
+      display.updateScreen(muteState);
       //set the relays
       relays.setVolume(count);
       //set a delayed commit (this prevents us from wearing out the flash with each detent)
       FlashCommit = m;
     } else {
       //just save the new volume
-      settings.volume = count;
+      sysSettings.volume = count;
     }
   }
 }
@@ -347,7 +373,7 @@ void loop() {
   wifiLoop(m);
 
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
-      preferences.putBytes("settings", &settings, sizeof(Settings));
+      preferences.putBytes("settings", &sysSettings, sizeof(Settings));
       FlashCommit = 0;
   }
 

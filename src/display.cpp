@@ -23,10 +23,10 @@ void Display::loop() {
 }
 
 //function that puts the input and volume on the screen
-void Display::updateScreen(Settings settings, bool muteState) {
+void Display::updateScreen(bool muteState) {
   char volume [5];
   if (muteState == 0) {
-    uint16_t v = round(((float)settings.volume / (float)VOL_MAX) * 100);
+    uint16_t v = round(((float)sysSettings.volume / (float)VOL_MAX) * 100);
     itoa(v, volume, 10);
     strcat(volume, "%");
   } else {
@@ -42,7 +42,7 @@ void Display::updateScreen(Settings settings, bool muteState) {
   //left starting position for the volume (so it's right-aligned)
   uint16_t x = 256 - u8g2.getStrWidth(volume);
 
-  u8g2.drawStr(0, y, settings.inputNames[settings.input - 1].c_str());
+  u8g2.drawStr(0, y, sysSettings.inputNames[sysSettings.input - 1].c_str());
   u8g2.drawStr(x, y, volume);
 
   u8g2.setFont(u8g2_font_crox1h_tr);
@@ -55,7 +55,7 @@ void Display::updateScreen(Settings settings, bool muteState) {
   //write data to screen
   u8g2.sendBuffer();
   //dim the display in 10s
-  if (settings.dim == 1) {
+  if (sysSettings.dim == 1) {
     screenTimer = millis();
   }
 }
