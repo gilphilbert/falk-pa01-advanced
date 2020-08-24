@@ -1,5 +1,7 @@
 #include "display.h"
 
+#include "falk-pre-conf.h"
+
 // THIS BLOCK NEEDED FOR THE DISPLAY
 #include <SPI.h>
 #include "U8g2lib.h"
@@ -23,7 +25,7 @@ void Display::loop() {
 }
 
 //function that puts the input and volume on the screen
-void Display::updateScreen(bool muteState) {
+void Display::updateScreen() {
   char volume [5];
   if (muteState == 0) {
     uint16_t v = round(((float)sysSettings.volume / (float)VOL_MAX) * 100);

@@ -61,4 +61,15 @@ typedef struct {
 
 extern Settings sysSettings;
 
+// FIRMWARE VERSION (THIS SW)
+extern String fw_version;
+
+#include "relays.h"
+extern RelayController relays;
+
+#include "display.h"
+extern Display display;
+
+extern int muteState;
+
 #endif

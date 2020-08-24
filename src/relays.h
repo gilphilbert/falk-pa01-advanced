@@ -1,3 +1,6 @@
+#ifndef FALK_RELAYS
+#define FALK_RELAYS
+
 //how to find the two MCP23017s
 #define MCP_PORTA               0x00
 #define MCP_PORTB               0x01
@@ -24,3 +27,5 @@ class RelayController {
     void setVolume(int volume);
     void loop();
 };
+
+#endif
