@@ -24,6 +24,7 @@ class RelayController {
   public:
     void begin();
     void setInput(int input);
+    void setVolume();
     void setVolume(int volume);
     void loop();
 };

@@ -12,7 +12,7 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'box' },
             cr.h2('Volume'),
             cr.div({ class: 'volume-container' },
-              cr.input({ type: 'range', min: '1', max: '100', value: '50', class: 'volume', id: 'volume', on: { change: (e) => { volumeChange(e) } } })
+              cr.input({ type: 'range', min: '1', max: '100', value: '20', class: 'volume', id: 'volume', on: { change: (e) => { volumeChange(e) } } })
             )
           )
         )
@@ -22,10 +22,10 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'box' },
             cr.h2('Input'),
             cr.div({ class: 'row middle-xs center-xs' },
-              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 1')),
-              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 2')),
-              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 3')),
-              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, 'Input 4'))
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box selected' }, cr.img({ src: 'icons/disc.svg' }), cr.span('CD'))),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, cr.img({ src: 'icons/network.svg' }), cr.span('DAP'))),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, cr.img({ src: 'icons/radio.svg' }), cr.span('Radio'))),
+              cr.div({ class: 'col-xs-3' }, cr.div({ class: 'input-box' }, cr.img({ src: 'icons/laptop.svg' }), cr.span('Laptop'))),
             )
           )
         )
@@ -33,9 +33,12 @@ function getContent(fragmentId, callback) {
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
           cr.div({ class: 'box' },
-            cr.a({ href: '#settings' },
-              cr.h2('Settings'),
-              cr.div({ class: 'row middle-xs center-xs' }
+            cr.h2('Settings'),
+            cr.div({ class: 'row middle-xs' },
+              cr.div({ class: 'col-xs' },
+                cr.a({ href: '#settings' },
+                  cr.span({ class: 'button-round'}, cr.img({ src: 'settings.svg' }))
+                )
               )
             )
           )
@@ -136,16 +139,16 @@ function getContent(fragmentId, callback) {
       ),
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
-          cr.label({ for: 'update-file', class: 'is-clickable' },
-            cr.div({ class: 'box' },
-              cr.div({ class: 'row middle-xs' },
-                cr.div({ class: 'col-xs' },
-                  cr.h2('Firmware update'),
-                  cr.p('Update the device firmware'),
-                  cr.progress({ id: 'update-progress', class: 'is-hidden', max: 100, min: 0, value: 0 }),
-                  cr.input({ type: 'file', id: 'update-file', class: 'is-hidden', on: { change: (e) => { uploadOTA(e) } } }),
-                  cr.p({ id: 'update-success', class: 'is-hidden' }, 'Firmware updated sucessfully')
-                )
+          cr.div({ class: 'box' },
+            cr.div({ class: 'row middle-xs' },
+              cr.div({ class: 'col-xs' },
+                cr.h2('Firmware update'),
+                cr.label({ for: 'update-file', class: 'is-clickable' },
+                  cr.span({ class: 'button-round'}, cr.img({ src: 'upload.svg' }))
+                ),
+                cr.progress({ id: 'update-progress', class: 'is-hidden', max: 100, min: 0, value: 0 }),
+                cr.input({ type: 'file', id: 'update-file', class: 'is-hidden', on: { change: (e) => { uploadOTA(e) } } }),
+                cr.p({ id: 'update-success', class: 'is-hidden' }, 'Firmware updated sucessfully')
               )
             )
           )

@@ -33,21 +33,19 @@
 
 // ====== DEFINE PINS ====== //
 
-#define WIFI_BUTTON             34
+#define WIFI_BUTTON             35
 
 #define SCREEN_CS               5
 #define SCREEN_DC               15
 #define SCREEN_RST              13
 
-#define MUTE_BUTTON             35
-#define MUTE_SET                32
-#define MUTE_RESET              33
+#define MUTE_BUTTON             34
 
-#define INP_ENCODER_A           25
-#define INP_ENCODER_B           26
+#define INP_ENCODER_A           14
+#define INP_ENCODER_B           27
 
-#define VOL_ENCODER_A           27
-#define VOL_ENCODER_B           14
+#define VOL_ENCODER_A           26
+#define VOL_ENCODER_B           25
 
 // ====== SETTINGS (INCL. DEFAULTS) ====== //
 
@@ -72,4 +70,10 @@ extern Display display;
 
 extern int muteState;
 
+#include "ESP32Encoder.h"
+// for the volume rotary encoder
+extern ESP32Encoder volEnc;
+
+// for the input rotary encoder
+extern ESP32Encoder inpEnc;
 #endif

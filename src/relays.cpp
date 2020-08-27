@@ -56,15 +56,13 @@ void RelayController::setInput(int input) {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   Wire.write(MCP_PORTA_PINS);
-  //Wire.write(setVal);
-  Wire.write(255-setVal); /// <!----------------------------- FOR v1.0 BOARD
+  Wire.write(setVal);
   Wire.endTransmission();  //kill the connection
 
   Serial.println(255-setVal);
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   Wire.write(MCP_PORTB_PINS);
-  //Wire.write(255 - setVal);
-  Wire.write(setVal); /// <!----------------------------- FOR v1.0 BOARD
+  Wire.write(255 - setVal);
   Wire.endTransmission();  //kill the connection
   InputRelayPulseTime = millis();
 }
@@ -89,6 +87,26 @@ void RelayController::endInputPulse() {
   //stop this running again
   InputRelayPulseTime = 0;
 };
+
+void RelayController::setVolume() {
+  //select the volume GPIOs
+  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
+  //select the "A" bank pins
+  Wire.write(MCP_PORTA_PINS);
+  //set volume
+  Wire.write(sysSettings.volume);
+  //kill session
+  Wire.endTransmission();
+  //select the volume GPIOs
+  Wire.beginTransmission(MCP_VOLUME_ADDRESS);
+  //select the "A" bank pins
+  Wire.write(MCP_PORTB_PINS);
+  //set volume
+  Wire.write(VOL_MAX - sysSettings.volume);
+  //kill session
+  Wire.endTransmission();
+  VolumeRelayPulseTime = millis();
+}
 
 void RelayController::setVolume(int volume) {
   //select the volume GPIOs

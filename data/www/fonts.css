@@ -12,10 +12,3 @@
     font-weight: normal;
     font-style: normal;
 }
-@font-face {
-    font-family: 'Rubrik';
-    src: url('rubrik1_sb.woff2') format('woff2'),
-         url('rubrik1_sb.woff') format('woff');
-    font-weight: bold;
-    font-style: normal;
-}

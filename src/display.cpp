@@ -10,7 +10,7 @@
 // for the display
 // this uses the default SPI interface as defined by the manufacturer
 // NOTE: for the Adafruit HUZZAH32, use the *labelled pins*, not the standard ones for the ESP32
-U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, SCREEN_CS, SCREEN_DC, SCREEN_RST);
+U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R2, SCREEN_CS, SCREEN_DC, SCREEN_RST);
 uint32_t screenTimer = 0;
 
 void Display::begin() {
@@ -27,7 +27,7 @@ void Display::loop() {
 //function that puts the input and volume on the screen
 void Display::updateScreen() {
   char volume [5];
-  if (muteState == 0) {
+  if ((muteState == 0) && sysSettings.volume > 0) {
     uint16_t v = round(((float)sysSettings.volume / (float)VOL_MAX) * 100);
     itoa(v, volume, 10);
     strcat(volume, "%");

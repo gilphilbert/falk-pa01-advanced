@@ -33,11 +33,10 @@ function loadContent () {
 }
 
 function volumeChange(e) {
-  console.log("Goal::" + e.target.value)
-  body = {
-    volume: e.target.value
-  }
-  window.fetch('/api/volume', { method: 'POST', body: JSON.stringify(body) })
+  body = JSON.stringify({
+    volume: parseInt(e.target.value)
+  })
+  window.fetch('/api/volume', { method: 'POST', body: body })
     .then(response => response.json())
     .then(data => {
       console.log(data)

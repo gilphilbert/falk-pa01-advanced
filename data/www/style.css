@@ -80,11 +80,18 @@ img.logo {
   cursor: pointer;
 }
 .input-box {
-  background: #255C99;
+  background: #3B3F42;
   color: #FCFFFF;
   border-radius: 4px;
   padding: 12px 6px;
   font-size: 14px;
+}
+.input-box span {
+  display: block;
+  margin-top: 4px;
+}
+.input-box.selected {
+  background-color: #255C99;
 }
 figure {
   margin: 0;
@@ -93,4 +100,17 @@ figure {
   figure {
       margin: 40px 0;
   }
+}
+span.button-round {
+  background-color: #255C99;
+  display: inline-flex;
+  margin: 0px;
+  padding: 0px;
+  border-radius: 1000px;
+}
+span.button-round img {
+  height: 20px;
+  width: 20px;
+  display: inline-block;
+  margin: 12px;
 }

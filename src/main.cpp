@@ -1,11 +1,9 @@
 /*
 TO DO:
-* Find out why volume drops from 0% to 100%
 * Update UI
 * Fix API-based volume (probably something in JSON or casting to)
 */
 #include <Arduino.h>
-#include "ESP32Encoder.h"
 #include <driver/gpio.h>
 #include <Wire.h>
 
@@ -20,23 +18,16 @@ TO DO:
 WiFiManager wifi;
 
 Preferences preferences;
-uint32_t FlashCommit = 0;
-
-// for the volume rotary encoder
-ESP32Encoder volEnc;
-
-// for the input rotary encoder
-ESP32Encoder inpEnc;
+int FlashCommit = 0;
 
 // to handle mute state
 int muteButtonState;
 int lastmuteButtonState = HIGH;
-unsigned long muteDebounceTime = 0;
-uint32_t MuteRelayPulseTime = 0;
+int muteDebounceTime = 0;
 
 // wifi settings
-uint32_t wifiButtonPressTime = 0;
-uint32_t wifiConnectTimeout = 0;
+int wifiButtonPressTime = 0;
+int wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
 
 void setup(){	
@@ -71,8 +62,6 @@ void setup(){
 
   //configure the mute button
   pinMode(MUTE_BUTTON, INPUT);
-  pinMode(MUTE_SET, OUTPUT);
-  pinMode(MUTE_RESET, OUTPUT);
 
   //the relays *should* match our stored values (since they're latching) but we can't be sure
   //so we set them to these values so the screen and relays match
@@ -89,7 +78,7 @@ void setup(){
   wifi.enable();
 }
 
-void muteLoop(uint32_t m) {
+void muteLoop(int m) {
   int reading = digitalRead(MUTE_BUTTON);
 
   if (reading != lastmuteButtonState) {
@@ -103,29 +92,24 @@ void muteLoop(uint32_t m) {
       if (muteButtonState == LOW) {
         if (muteState == 0) {
           muteState = 1;
+          volEnc.setCount(0);
           volEnc.pauseCount();
-          display.updateScreen();
-          digitalWrite(MUTE_SET, 1);
-          MuteRelayPulseTime = millis();
         } else {
           muteState = 0;
           volEnc.resumeCount();
+          volEnc.setCount(sysSettings.volume);
+          //write to the screen
           display.updateScreen();
-          digitalWrite(MUTE_RESET, 1);
-          MuteRelayPulseTime = millis();
+          //set the relays
+          relays.setVolume(sysSettings.volume);
         }
       }
     }
   }
   lastmuteButtonState = reading;
-
-  if ((MuteRelayPulseTime > 0) && (m > MuteRelayPulseTime + RELAY_PULSE)) {
-    digitalWrite(MUTE_SET, 0);
-    digitalWrite(MUTE_RESET, 0);
-  }
 }
 
-void wifiLoop(uint32_t m) {
+void wifiLoop(int m) {
   int reading = digitalRead(WIFI_BUTTON);
   if (reading != wifibuttonstate) {
     Serial.println(reading);
@@ -148,7 +132,7 @@ void wifiLoop(uint32_t m) {
 }
 
 void inputLoop(int m) {
-  uint16_t count = inpEnc.getCount();
+  int count = inpEnc.getCount();
   if (count != sysSettings.input) {
     if (count > INP_MAX) {
       count = INP_MIN;
@@ -167,7 +151,7 @@ void inputLoop(int m) {
 
 void volumeLoop(int m) {
   //gets the current volume, checks to see if it's changed and sets the new volume
-  uint16_t count = volEnc.getCount();
+  int count = volEnc.getCount();
   if (count != sysSettings.volume) {
     //if we're outside the limts, override with the limits
     if (count > VOL_MAX) {
@@ -181,8 +165,10 @@ void volumeLoop(int m) {
     }
     //check again (in case we reset to be inside the limits)
     if (count != sysSettings.volume) {
-      //save the new volume
-      sysSettings.volume = count;
+      //save the new volume, as long as we're not going into mute
+      if (muteState == 0) {
+        sysSettings.volume = count;
+      }
       //write to the screen
       display.updateScreen();
       //set the relays

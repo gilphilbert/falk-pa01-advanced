@@ -39,7 +39,7 @@ void WiFiManager::begin() {
     //return the request
     return request->send(200, "application/json", retStr);
   });
-
+  
   server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
     // create a JSON object for the response
     StaticJsonDocument<200> doc;
@@ -58,22 +58,23 @@ void WiFiManager::begin() {
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
     StaticJsonDocument<200> doc;
-    deserializeJson(doc, data);
+    deserializeJson(doc, (const char*) data);
+
+    int vol = sysSettings.volume;
     if (doc.containsKey("volume")) {
-      int vol = doc["volume"];
-      sysSettings.volume = vol;
-      relays.setVolume(sysSettings.volume);
+      vol = doc["volume"].as<int>();
+      volEnc.setCount(vol);
     }
     // create a JSON object for the response
     doc.clear();
     JsonObject retObj = doc.to<JsonObject>();
 
     retObj["max"] = VOL_MAX;
-    retObj["current"] = sysSettings.volume;
+    retObj["current"] = vol;
 
     //generate the string
     String retStr;
-    serializeJson(retObj, retStr);
+    serializeJson(doc, retStr);
     return request->send(200, "application/json", retStr);
   });
 
