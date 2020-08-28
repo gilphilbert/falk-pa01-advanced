@@ -1,8 +1,8 @@
 #include "falk-pre-conf.h"
 
-Settings sysSettings;
+DeviceSettings sysSettings;
 
-String fw_version = "0.1.36";
+String fw_version = "0.1.41";
 
 int muteState = 0;
 

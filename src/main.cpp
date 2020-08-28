@@ -42,13 +42,13 @@ void setup(){
   //start preferences
   preferences.begin("falk-pre", false);
   //preferences.clear();
-  preferences.getBytes("settings", &sysSettings, sizeof(Settings));
+  preferences.getBytes("settings", &sysSettings, sizeof(DeviceSettings));
 
   //add some default values if this is our first boot
   if (sysSettings.saved == 0) {
     sysSettings.saved = 1;
     for (int i = 0; i < INP_MAX; i++) {
-      sysSettings.inputNames[i] = "Input " + (String)(i+1);
+      sysSettings.inputs[i].name = "Input " + (String)(i+1);
     }
   }
 
@@ -191,7 +191,7 @@ void loop() {
   wifiLoop(m);
 
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
-      preferences.putBytes("settings", &sysSettings, sizeof(Settings));
+      preferences.putBytes("settings", &sysSettings, sizeof(DeviceSettings));
       FlashCommit = 0;
   }
 

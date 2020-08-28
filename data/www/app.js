@@ -7,6 +7,7 @@ function loadContent () {
       v.remove()
     })
     contentDiv.appendChild(content)
+    const cr = crel.proxy
 
     // get any data relevant for this page
     switch (fragmentId) {
@@ -18,6 +19,18 @@ function loadContent () {
             document.getElementById('volume').max = data.volume.max
             document.getElementById('volume').value = data.volume.current
             console.log(data)
+            if (data.inputs) {
+              data.inputs.list.forEach((v) => {
+                document.getElementById('input-container').appendChild(
+                  cr.div({ class: 'col-xs-3' },
+                    cr.div({ class: 'pointer input-box' + ((data.inputs.selected == v.id) ? ' selected' : ''), 'data-id': v.id, on: { click: function() { inputChange(this) } } },
+                      cr.img({ src: 'icons/' + v.icon + '.svg' }),
+                      cr.span(v.name)
+                    )
+                  )
+                )
+              })
+            }
           })
         break
       case 'firmware':
@@ -42,6 +55,25 @@ function volumeChange(e) {
       console.log(data)
     })
 }
+
+function inputChange(el) {
+  body = JSON.stringify({
+    input: parseInt(el.closest('.input-box').dataset['id'])
+  })
+  window.fetch('/api/input', { method: 'POST', body: body })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+      document.querySelectorAll('.input-box').forEach((el) => {
+        if (el.dataset['id'] == data.selected) {
+          el.classList.add("selected")
+        } else {
+          el.classList.remove("selected")
+        }
+      })
+    })
+}
+
 //var progress = -1
 var uploading = false
 function uploadOTA (event) {

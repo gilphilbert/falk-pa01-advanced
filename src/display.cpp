@@ -44,7 +44,7 @@ void Display::updateScreen() {
   //left starting position for the volume (so it's right-aligned)
   uint16_t x = 256 - u8g2.getStrWidth(volume);
 
-  u8g2.drawStr(0, y, sysSettings.inputNames[sysSettings.input - 1].c_str());
+  u8g2.drawStr(0, y, sysSettings.inputs[sysSettings.input - 1].name.c_str());
   u8g2.drawStr(x, y, volume);
 
   u8g2.setFont(u8g2_font_crox1h_tr);

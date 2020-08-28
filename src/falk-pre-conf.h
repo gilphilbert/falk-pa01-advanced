@@ -48,16 +48,21 @@
 #define VOL_ENCODER_B           25
 
 // ====== SETTINGS (INCL. DEFAULTS) ====== //
+typedef struct {
+  String name;
+  String icon = "disc";
+} DeviceInput;
 
 typedef struct {
   int16_t volume = 26;
   int16_t input = 1;
-  String inputNames [INP_MAX];
+  DeviceInput inputs [INP_MAX];
   uint16_t saved = 0;
   uint8_t dim = 1;
-} Settings;
+  uint8_t icon = 0;
+} DeviceSettings;
 
-extern Settings sysSettings;
+extern DeviceSettings sysSettings;
 
 // FIRMWARE VERSION (THIS SW)
 extern String fw_version;

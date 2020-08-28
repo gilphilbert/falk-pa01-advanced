@@ -17,10 +17,10 @@ a {
 .is-centered img {
   margin: 0 auto;
 }
-.is-clickable {
+.pointer {
   cursor: pointer;
 }
-.is-hidden {
+.hidden {
   display: none;
 }
 img.logo {
@@ -113,4 +113,7 @@ span.button-round img {
   width: 20px;
   display: inline-block;
   margin: 12px;
+}
+.nogrow {
+  flex-grow: 0;
 }

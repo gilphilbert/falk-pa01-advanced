@@ -15,7 +15,7 @@ void WiFiManager::begin() {
   // API CONTENT
   server.on("/api/status", HTTP_GET, [&](AsyncWebServerRequest *request){
     // create a JSON object for the response
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<800> doc;
     JsonObject retObj = doc.to<JsonObject>();
 
     //generate the volume object
@@ -25,11 +25,14 @@ void WiFiManager::begin() {
     
     //generate the inputs object
     JsonObject inpObj = retObj.createNestedObject("inputs");
-    inpObj["selected"] = sysSettings.input;
+    inpObj["selected"] = sysSettings.input - 1;
     JsonArray inpList = inpObj.createNestedArray("list");
     for (int i = 0; i < INP_MAX; i++) {
-      inpList.add(sysSettings.inputNames[i]);
-    }
+      JsonObject io = inpList.createNestedObject();
+      io["id"] = i + 1;
+      io["name"] = sysSettings.inputs[i].name;
+      io["icon"] = sysSettings.inputs[i].icon;
+    } 
     //things to return:
     // settings?
 
@@ -78,6 +81,29 @@ void WiFiManager::begin() {
     return request->send(200, "application/json", retStr);
   });
 
+  server.on("/api/input", HTTP_POST, [](AsyncWebServerRequest *request){
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    int inp = sysSettings.input;
+    if (doc.containsKey("input")) {
+      inp = doc["input"].as<int>();
+      inpEnc.setCount(inp);
+    }
+    // create a JSON object for the response
+    doc.clear();
+    JsonObject retObj = doc.to<JsonObject>();
+
+    retObj["selected"] = inp;
+
+    //generate the string
+    String retStr;
+    serializeJson(doc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
   server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
     File appFile = SPIFFS.open("/version", "r");
     String app_version = appFile.readString();
@@ -103,6 +129,9 @@ void WiFiManager::begin() {
   },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
+      if (filename != "spiffs.bin" && filename != "firmware.bin") {
+        return request->send(200, "text/plain", "Invalid firmware");
+      }
       int cmd = (filename == "spiffs.bin") ? U_SPIFFS : U_FLASH;
       if(!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)){
         Update.printError(Serial);
