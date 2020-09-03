@@ -13,6 +13,8 @@
 
 class WiFiManager {
   private:
+    String translateEncryptionType(wifi_auth_mode_t encryptionType);
+    String getNetworks();
   public:
     void begin();
     void loop();

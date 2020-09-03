@@ -33,16 +33,57 @@ function loadContent () {
             }
           })
         break
-      case 'firmware':
-        window.fetch('/api/firmware')
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById('firmware-version').innerText = data.fw
-            document.getElementById('application-version').innerText = data.app
-          })
-        break
+        case 'firmware':
+          window.fetch('/api/firmware')
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('firmware-version').innerText = data.fw
+              document.getElementById('application-version').innerText = data.app
+            })
+          break
+        case 'wifi':
+          window.fetch('/api/networks')
+            .then(response => response.json())
+            .then(data => {
+              var df = new DocumentFragment;
+              data.forEach(v => {
+                console.log(v)
+                df.appendChild(
+                  cr.div({ class: 'row middle-xs' },
+                    cr.div({ class: 'col-xs vpad nogrow' },
+                      cr.img({ class: 'icon-sm', src: 'icons/' + getWifiIcon(v.signal, v.security) })
+                    ),
+                    cr.div({ class: 'col-xs' },
+                      v.ssid
+                    )
+                  )
+                )
+              })
+              document.getElementById('network-list').firstChild.remove();
+              document.getElementById('network-list').appendChild(df);
+            })
+          break
     }
   })
+}
+
+function getWifiIcon(rssi, secure) {
+  var icon = 'wifi-'
+  if (rssi >= -30) {
+    icon += '4'
+  } else if (rssi >= -67) {
+    icon += '3'
+  } else if (rssi >= -70) {
+    icon += '2'
+  } else if (rssi >= -80) {
+    icon += '1'
+  } else {
+    icon += '0'
+  }
+  if (secure != "OPEN") {
+    icon += '-secure'
+  }
+  return icon + '.svg'
 }
 
 function volumeChange(e) {
@@ -77,7 +118,7 @@ function inputChange(el) {
 //var progress = -1
 var uploading = false
 function uploadOTA (event) {
-  document.getElementById('update-progress').classList.remove('is-hidden')
+  document.getElementById('update-progress').classList.remove('hidden')
   this.uploading = true
   const formData = new FormData()
   if (event !== null) {
@@ -99,7 +140,7 @@ function uploadOTA (event) {
     uploading = false
     //progress = 0
     if (OTASuccess == true) {
-      document.getElementById('update-success').classList.remove('is-hidden');
+      document.getElementById('update-success').classList.remove('hidden');
     } else {
       console.log(OTAError)
     }

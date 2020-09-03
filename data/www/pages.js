@@ -113,6 +113,23 @@ function getContent(fragmentId, callback) {
       ),
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
+          cr.a({ href: '#wifi' },
+            cr.div({ class: 'box' },
+              cr.div({ class: 'row middle-xs' },
+                cr.div({ class: 'col-xs' },
+                  cr.h2('Wireless'),
+                  cr.p('Connect this device to your Wifi')
+                ),
+                cr.div({ class: 'col-xs fixed-52' }
+                // svg class: 'chevron pure-flex-middle-xs' xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>
+                )
+              )
+            )
+          )
+        )
+      ),
+      cr.div({ class: 'row' },
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
           cr.a({ href: '#firmware' },
             cr.div({ class: 'box' },
               cr.div({ class: 'row middle-xs' },
@@ -124,6 +141,18 @@ function getContent(fragmentId, callback) {
                 // svg class: 'chevron pure-flex-middle-xs' xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>
                 )
               )
+            )
+          )
+        )
+      )
+    ),
+    wifi: cr.div(
+      cr.div({ class: 'row' },
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-sm-12' },
+          cr.div({ class: 'box' },
+            cr.h2('Select a WiFi network:'),
+            cr.div({ id: 'network-list' },
+              cr.p('Scanning...')
             )
           )
         )

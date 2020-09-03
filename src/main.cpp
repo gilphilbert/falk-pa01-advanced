@@ -1,7 +1,8 @@
 /*
 TO DO:
 * Update UI
-* Fix API-based volume (probably something in JSON or casting to)
+* All settings (UI)
+* Join local wifi instead of AP
 */
 #include <Arduino.h>
 #include <driver/gpio.h>

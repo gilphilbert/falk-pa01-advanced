@@ -2,7 +2,7 @@
 
 DeviceSettings sysSettings;
 
-String fw_version = "0.1.41";
+String fw_version = "0.1.42";
 
 int muteState = 0;
 

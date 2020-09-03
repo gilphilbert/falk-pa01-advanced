@@ -28,6 +28,10 @@ img.logo {
   margin-top: 15px;
   margin-bottom: 8px;
 }
+img.icon-sm {
+  width: 24px;
+  height: 24px;
+}
 @media (min-width: 768px) {
   img.logo {
       width: 90px;
@@ -116,4 +120,8 @@ span.button-round img {
 }
 .nogrow {
   flex-grow: 0;
+}
+.col-xs.vpad {
+  padding-top: 5px;
+  padding-bottom: 5px;
 }

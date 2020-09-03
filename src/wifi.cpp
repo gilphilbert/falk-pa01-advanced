@@ -157,6 +157,10 @@ void WiFiManager::begin() {
     }
   });
 
+  server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
+    String networks = WiFiManager::getNetworks();
+    return request->send(200, "application/json", networks);
+  });
 
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
@@ -175,6 +179,9 @@ void WiFiManager::loop() {
 }
 
 void WiFiManager::enable() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.enableSTA(false);
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid);
   IPAddress IP = WiFi.softAPIP();
   MDNS.begin(HOSTNAME);
@@ -187,4 +194,48 @@ void WiFiManager::enable() {
   WiFiManager::begin();
 
   //wifiConnectTimeout = millis();
+}
+
+String WiFiManager::translateEncryptionType(wifi_auth_mode_t encryptionType) {
+  String encType = "Unknown";
+  switch (encryptionType) {
+    case (WIFI_AUTH_OPEN):
+      encType = "OPEN";
+    case (WIFI_AUTH_WEP):
+      encType = "WEP";
+    case (WIFI_AUTH_WPA_PSK):
+      encType = "WPA_PSK";
+    case (WIFI_AUTH_WPA2_PSK):
+      encType = "WPA2_PSK";
+    case (WIFI_AUTH_WPA_WPA2_PSK):
+      encType = "WPA_WPA2_PSK";
+    case (WIFI_AUTH_WPA2_ENTERPRISE):
+      encType = "WPA2_ENTERPRISE";
+    case (WIFI_AUTH_MAX):
+      encType = "MAX";
+  }
+  return encType;
+}
+
+String WiFiManager::getNetworks() {
+  int numberOfNetworks = WiFi.scanNetworks();
+ 
+  //Serial.print("Number of networks found: ");
+  //Serial.println(numberOfNetworks);
+  StaticJsonDocument<4000> doc;
+  JsonArray retArr = doc.to<JsonArray>();
+
+  for (int i = 0; i < numberOfNetworks; i++) {
+    JsonObject obj = retArr.createNestedObject();
+    //Serial.print("Network name: ");
+    //Serial.println(WiFi.SSID(i));
+    obj["ssid"] = WiFi.SSID(i);
+    obj["signal"] = WiFi.RSSI(i);
+    obj["mac"] = WiFi.BSSIDstr(i);
+    obj["security"] = translateEncryptionType(WiFi.encryptionType(i));
+  }
+  //generate the string
+  String retStr;
+  serializeJson(retArr, retStr);
+  return retStr;
 }
