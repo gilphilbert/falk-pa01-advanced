@@ -28,13 +28,13 @@ void WiFiManager::begin() {
     inpObj["selected"] = sysSettings.input - 1;
     JsonArray inpList = inpObj.createNestedArray("list");
     for (int i = 0; i < INP_MAX; i++) {
-      JsonObject io = inpList.createNestedObject();
-      io["id"] = i + 1;
-      io["name"] = sysSettings.inputs[i].name;
-      io["icon"] = sysSettings.inputs[i].icon;
-    } 
-    //things to return:
-    // settings?
+      if (sysSettings.inputs[i].enabled == 1) {
+        JsonObject io = inpList.createNestedObject();
+        io["id"] = i + 1;
+        io["name"] = sysSettings.inputs[i].name;
+        io["icon"] = sysSettings.inputs[i].icon;
+      }
+    }
 
     //generate the string
     String retStr;
@@ -57,6 +57,7 @@ void WiFiManager::begin() {
     serializeJson(retObj, retStr);
     return request->send(200, "application/json", retStr);
   });
+  
   server.on("/api/volume", HTTP_POST, [](AsyncWebServerRequest *request){
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
@@ -81,6 +82,27 @@ void WiFiManager::begin() {
     return request->send(200, "application/json", retStr);
   });
 
+  server.on("/api/inputs", HTTP_GET, [&](AsyncWebServerRequest *request){
+    // create a JSON object for the response
+    StaticJsonDocument<800> doc;
+    JsonObject retObj = doc.to<JsonObject>();
+
+    //generate the inputs object
+    JsonArray inpList = retObj.createNestedArray("list");
+    for (int i = 0; i < INP_MAX; i++) {
+      JsonObject io = inpList.createNestedObject();
+      io["id"] = i + 1;
+      io["name"] = sysSettings.inputs[i].name;
+      io["icon"] = sysSettings.inputs[i].icon;
+      io["icon"] = sysSettings.inputs[i].enabled;
+    }
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    //return the request
+    return request->send(200, "application/json", retStr);
+  });
   server.on("/api/input", HTTP_POST, [](AsyncWebServerRequest *request){
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
@@ -103,6 +125,37 @@ void WiFiManager::begin() {
     serializeJson(doc, retStr);
     return request->send(200, "application/json", retStr);
   });
+  server.on("/api/input", HTTP_PUT, [](AsyncWebServerRequest *request){
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    StaticJsonDocument<200> retDoc;
+    JsonObject retObj = retDoc.to<JsonObject>();
+
+    if (doc.containsKey("input")) {
+      int inp = doc["input"].as<int>();
+      if (inp >= INP_MIN && inp <= INP_MAX) {
+        if(doc.containsKey("name")) {
+          sysSettings.inputs[inp].name = doc["name"].as<String>();
+        }
+        if(doc.containsKey("icon")) {
+          sysSettings.inputs[inp].name = doc["icon"].as<String>();
+        }
+        if(doc.containsKey("enabled")) {
+          sysSettings.inputs[inp].enabled = doc["enabled"].as<int>();
+        }
+      }
+      retObj["status"] = "ok";
+    } else {
+      retObj["status"] = "fail";
+    }
+    //generate the string
+    String retStr;
+    serializeJson(retDoc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
 
   server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
     File appFile = SPIFFS.open("/version", "r");
@@ -119,6 +172,11 @@ void WiFiManager::begin() {
     String retStr;
     serializeJson(retObj, retStr);
     return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
+    String networks = WiFiManager::getNetworks();
+    return request->send(200, "application/json", networks);
   });
   
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
@@ -157,12 +215,8 @@ void WiFiManager::begin() {
     }
   });
 
-  server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
-    String networks = WiFiManager::getNetworks();
-    return request->send(200, "application/json", networks);
-  });
 
-  server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
+  server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
 
   server.begin();
 }

@@ -24,7 +24,7 @@ function loadContent () {
                 document.getElementById('input-container').appendChild(
                   cr.div({ class: 'col-xs-3' },
                     cr.div({ class: 'pointer input-box' + ((data.inputs.selected == v.id) ? ' selected' : ''), 'data-id': v.id, on: { click: function() { inputChange(this) } } },
-                      cr.img({ src: 'icons/' + v.icon + '.svg' }),
+                      getSVG(v.icon),
                       cr.span(v.name)
                     )
                   )
@@ -33,14 +33,21 @@ function loadContent () {
             }
           })
         break
-        case 'firmware':
-          window.fetch('/api/firmware')
+        case 'inputs':
+          window.fetch('/api/inputs')
             .then(response => response.json())
             .then(data => {
-              document.getElementById('firmware-version').innerText = data.fw
-              document.getElementById('application-version').innerText = data.app
+              console.log(data)
             })
           break
+          case 'firmware':
+            window.fetch('/api/firmware')
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('firmware-version').innerText = data.fw
+                document.getElementById('application-version').innerText = data.app
+              })
+            break
         case 'wifi':
           window.fetch('/api/networks')
             .then(response => response.json())
@@ -51,7 +58,7 @@ function loadContent () {
                 df.appendChild(
                   cr.div({ class: 'row middle-xs' },
                     cr.div({ class: 'col-xs vpad nogrow' },
-                      cr.img({ class: 'icon-sm', src: 'icons/' + getWifiIcon(v.signal, v.security) })
+                      getSVG(getWifiIcon(v.signal, v.security), 'icon-sm')
                     ),
                     cr.div({ class: 'col-xs' },
                       v.ssid
@@ -65,6 +72,18 @@ function loadContent () {
           break
     }
   })
+}
+
+var getSVG = function (iconName, cls) {
+  var svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svgElem.classList.add('icon')
+  var useElem = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+  useElem.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', 'icons/icons.svg#' + iconName)
+  svgElem.appendChild(useElem)
+  if (cls) {
+    cls.split(' ').forEach(c => svgElem.classList.add(c))
+  }
+  return svgElem
 }
 
 function getWifiIcon(rssi, secure) {
@@ -83,7 +102,7 @@ function getWifiIcon(rssi, secure) {
   if (secure != "OPEN") {
     icon += '-secure'
   }
-  return icon + '.svg'
+  return icon
 }
 
 function volumeChange(e) {
@@ -118,12 +137,25 @@ function inputChange(el) {
 //var progress = -1
 var uploading = false
 function uploadOTA (event) {
-  document.getElementById('update-progress').classList.remove('hidden')
+  if (uploading == true) {
+    return;
+  }
+  document.getElementById('update-file').setAttribute('disabled', true)
   this.uploading = true
   const formData = new FormData()
   if (event !== null) {
     this.file = event.target.files[0]
   }
+  if (this.file.name != "spiffs.bin" && this.file.name != "firmware.bin") {
+    document.getElementById('error-message').innerHTML = "Invalid firmware file! Select either <strong>firmware.bin</strong> or <strong>application.bin</strong>"
+    document.getElementById('error-container').classList.remove('hidden');
+    return;
+  } else if (this.file.name == 'firmware.bin') {
+    document.getElementById('update-type').innerText = "firmware"
+  } else {
+    document.getElementById('update-type').innerText = "application"
+  }
+  document.getElementById('error-container').classList.add('hidden');
   formData.append(this.type, this.file, this.type)
   const request = new XMLHttpRequest()
   request.addEventListener('load', () => {
@@ -131,27 +163,27 @@ function uploadOTA (event) {
     var OTAError = false
     // request.response will hold the response from the server
     if (request.status === 200) {
-      OTASuccess = true
+      document.getElementById('progress-container').classList.add('hidden')
+      document.getElementById('success-container').classList.remove('hidden');
     } else if (request.status !== 500) {
-      OTAError = `[HTTP ERROR] ${request.statusText}`
+      document.getElementById('error-message').innerText = `[HTTP ERROR] ${request.statusText}`
+      document.getElementById('error-container').classList.remove('hidden');
     } else {
-      OTAError = request.responseText
+      document.getElementById('error-message').innerText = request.responseText
+      document.getElementById('error-container').classList.remove('hidden');
     }
     uploading = false
-    //progress = 0
-    if (OTASuccess == true) {
-      document.getElementById('update-success').classList.remove('hidden');
-    } else {
-      console.log(OTAError)
-    }
+    document.getElementById('update-file').setAttribute('disabled', false)
   })
   // Upload progress
   request.upload.addEventListener('progress', (e) => {
     var progress = Math.trunc((e.loaded / e.total) * 100)
     document.getElementById('update-progress').value = progress
+    document.getElementById('update-percentage').innerText = progress
   })
   request.open('post', '/update')
   request.send(formData)
+  document.getElementById('progress-container').classList.remove('hidden')
 }
 
 window.addEventListener('DOMContentLoaded', (event) => {

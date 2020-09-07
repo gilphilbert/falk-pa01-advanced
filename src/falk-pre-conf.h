@@ -51,6 +51,7 @@
 typedef struct {
   String name;
   String icon = "disc";
+  int enabled = 1;
 } DeviceInput;
 
 typedef struct {
@@ -58,8 +59,10 @@ typedef struct {
   int16_t input = 1;
   DeviceInput inputs [INP_MAX];
   uint16_t saved = 0;
-  uint8_t dim = 1;
-  uint8_t icon = 0;
+  int dim = 1;
+  int icon = 0;
+  int maxVol = VOL_MAX;
+  int maxStartVol = -1;
 } DeviceSettings;
 
 extern DeviceSettings sysSettings;

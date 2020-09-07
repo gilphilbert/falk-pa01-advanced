@@ -40,6 +40,10 @@ void setup(){
   //configure the MCP27013 ICs
   relays.begin();
 
+  //turn everything off, this gives us a chance to correctly set the volume to the max startup volume, if set
+  relays.setInput(0);
+  relays.setVolume(0);
+
   //start preferences
   preferences.begin("falk-pre", false);
   //preferences.clear();
@@ -51,6 +55,10 @@ void setup(){
     for (int i = 0; i < INP_MAX; i++) {
       sysSettings.inputs[i].name = "Input " + (String)(i+1);
     }
+  }
+
+  if (sysSettings.maxStartVol > -1 && sysSettings.volume > sysSettings.maxStartVol) {
+    sysSettings.volume = sysSettings.maxStartVol;
   }
 
   //configure the input encoder
@@ -155,10 +163,11 @@ void volumeLoop(int m) {
   int count = volEnc.getCount();
   if (count != sysSettings.volume) {
     //if we're outside the limts, override with the limits
-    if (count > VOL_MAX) {
+    //we don't use VOL_MAX here, because we want to use the user-set limit
+    if (count > sysSettings.maxVol) {
       //restore back to the maximum volume
-      volEnc.setCount(VOL_MAX);
-      count = VOL_MAX;
+      volEnc.setCount(sysSettings.maxVol);
+      count = sysSettings.maxVol;
     } else if (count < VOL_MIN) {
       //restore back to the minimum volume
       volEnc.setCount(VOL_MIN);
