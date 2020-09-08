@@ -38,6 +38,34 @@ a {
 .hidden {
   display: none;
 }
+.addon {
+  display: flex;
+}
+.addon input {
+  width: 20px;
+  border: 0;
+  margin: 0;
+  height: 28px;
+}
+.addon button {
+  background: #255C99;
+  border: 0;
+  color: #FCFFFF;
+  line-height: 1;
+  padding: 3px;
+}
+.addon button svg {
+  height: 18px;
+  width: 18px;
+}
+.addon button:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+.addon button:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
 img.logo {
   width: 45px;
   margin-top: 15px;
@@ -52,21 +80,16 @@ svg.icon-sm {
       width: 90px;
   }
 }
-.box {
+div.menu>div.row {
   margin: 10px 20px;
-  /*padding: 0 15px;*/
 }
-.box h2 {
+div.menu h2 {
   margin-top: 0px;
   margin-bottom: 6px;
 }
-.box p {
+div.menu p {
   margin-top: 3px;
   margin-bottom: 12px;
-}
-.box svg.chevron {
-  height: 36px;
-  width: 36px;
 }
 
 .volume-container {
@@ -194,4 +217,36 @@ span.button-round svg {
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+}
+
+.spinner {
+  -webkit-animation-name: spin;
+  -webkit-animation-duration: 2000ms;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-name: spin;
+  -moz-animation-duration: 2000ms;
+  -moz-animation-iteration-count: infinite;
+  -moz-animation-timing-function: linear;
+  -ms-animation-name: spin;
+  -ms-animation-duration: 2000ms;
+  -ms-animation-iteration-count: infinite;
+  -ms-animation-timing-function: linear;
+  
+  animation-name: spin;
+  animation-duration: 2000ms;
+  animation-iteration-count: infinite;
+}
+
+@-moz-keyframes spin {
+  from { -moz-transform: rotate(0deg); }
+  to { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+  from { -webkit-transform: rotate(0deg); }
+  to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+  from {transform:rotate(0deg);}
+  to {transform:rotate(360deg);}
 }
