@@ -94,7 +94,7 @@ void WiFiManager::begin() {
       io["id"] = i + 1;
       io["name"] = sysSettings.inputs[i].name;
       io["icon"] = sysSettings.inputs[i].icon;
-      io["icon"] = sysSettings.inputs[i].enabled;
+      io["enabled"] = sysSettings.inputs[i].enabled;
     }
 
     //generate the string
@@ -136,20 +136,30 @@ void WiFiManager::begin() {
 
     if (doc.containsKey("input")) {
       int inp = doc["input"].as<int>();
-      if (inp >= INP_MIN && inp <= INP_MAX) {
+      inp = inp - 1; // we use zero indexing, but the api uses 1 indexing
+      if (inp >= (INP_MIN - 1) && inp < INP_MAX) {
         if(doc.containsKey("name")) {
           sysSettings.inputs[inp].name = doc["name"].as<String>();
         }
         if(doc.containsKey("icon")) {
-          sysSettings.inputs[inp].name = doc["icon"].as<String>();
+          sysSettings.inputs[inp].icon = doc["icon"].as<String>();
         }
         if(doc.containsKey("enabled")) {
           sysSettings.inputs[inp].enabled = doc["enabled"].as<int>();
         }
+        FlashCommit = millis();
+        retObj["id"] = inp;
+        retObj["name"] = sysSettings.inputs[inp].name;
+        retObj["icon"] = sysSettings.inputs[inp].icon;
+        retObj["enabled"] = sysSettings.inputs[inp].enabled;
+        retObj["status"] = "ok";
+      } else {
+        retObj["status"] = "fail";
+        retObj["message"] = "out of range (" + doc["input"].as<String>() + ")";
       }
-      retObj["status"] = "ok";
     } else {
       retObj["status"] = "fail";
+      retObj["message"] = "no input supplied";
     }
     //generate the string
     String retStr;
@@ -216,7 +226,8 @@ void WiFiManager::begin() {
   });
 
 
-  server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
+  //server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
+  server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
 }

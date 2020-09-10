@@ -19,7 +19,6 @@ TO DO:
 WiFiManager wifi;
 
 Preferences preferences;
-int FlashCommit = 0;
 
 // to handle mute state
 int muteButtonState;

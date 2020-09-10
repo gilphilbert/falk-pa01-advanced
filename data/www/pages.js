@@ -9,7 +9,6 @@ function getContent(fragmentId, callback) {
     main: cr.div({ class: 'menu' },
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          //cr.div({ class: 'box' },
             cr.h2('Volume'),
             cr.div({ class: 'row' },
               cr.div({ class: 'col-xs nogrow' },
@@ -21,7 +20,6 @@ function getContent(fragmentId, callback) {
                 )
               )
             )
-          //)
         )
       ),
       cr.div({ class: 'row' },
@@ -34,7 +32,6 @@ function getContent(fragmentId, callback) {
       ),
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          //cr.div({ class: 'box' },
             cr.h2('Settings'),
             cr.div({ class: 'row middle-xs' },
               cr.div({ class: 'col-xs' },
@@ -43,7 +40,6 @@ function getContent(fragmentId, callback) {
                 )
               )
             )
-          //)
         )
       ),
     ),
@@ -53,8 +49,8 @@ function getContent(fragmentId, callback) {
           cr.a({ href: '#inputs' },
             cr.div({ class: 'row middle-xs' },
               cr.div({ class: 'col-xs' },
-                cr.h2('Input names'),
-                cr.p('Your inputs are names, not numbers!')
+                cr.h2('Inputs'),
+                cr.p('Name your inputs and turn them on or off!')
               ),
               cr.div({ class: 'col-xs nogrow' },
                 cr.span({ class: 'button-round'}, getSVG('chevron-right'))
@@ -155,10 +151,8 @@ function getContent(fragmentId, callback) {
     inputs: cr.div({ class: 'menu' },
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          cr.div({ class: 'box' },
-            cr.h2('Inputs'),
-            cr.div({ id: 'input-list' })
-          )
+          cr.h2('Inputs'),
+          cr.div({ id: 'input-list' })
         )
       )
     ),

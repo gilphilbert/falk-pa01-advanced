@@ -38,6 +38,26 @@ function loadContent () {
             .then(response => response.json())
             .then(data => {
               console.log(data)
+              if(data.list) {
+                var df = new DocumentFragment;
+                data.list.forEach(v => {
+                  df.appendChild(
+                    cr.div({ class: 'row middle-xs padded' + ((v.enabled) ? '' : ' disabled'), 'data-id': v.id, 'data-name': v.name, 'data-icon': v.icon, 'data-enabled': v.enabled },
+                      cr.div({ class: 'col-xs nogrow' },
+                        getSVG(v.icon)
+                      ),
+                      cr.div({ class: 'col-xs' },
+                        v.name
+                      ),
+                      cr.div({ class: 'col-xs nogrow' },
+                        cr.span({ class: 'button-round sm', on: { click: (e) => { showModalInput(e); } } }, getSVG('settings'))
+                      )
+                    )
+                  )
+                })
+                document.getElementById('input-list').childNodes.forEach(v => { v.remove() })
+                document.getElementById('input-list').appendChild(df)
+              }
             })
           break
           case 'firmware':
@@ -56,8 +76,8 @@ function loadContent () {
               data.forEach(v => {
                 console.log(v)
                 df.appendChild(
-                  cr.div({ class: 'row middle-xs' },
-                    cr.div({ class: 'col-xs vpad nogrow' },
+                  cr.div({ class: 'row middle-xs padded' },
+                    cr.div({ class: 'col-xs nogrow' },
                       getSVG(getWifiIcon(v.signal, v.security), 'icon-sm')
                     ),
                     cr.div({ class: 'col-xs' },
@@ -74,6 +94,83 @@ function loadContent () {
   })
 }
 
+function showModalInput(e) {
+  const cr = crel.proxy
+  data = e.target.closest('.row').dataset
+  var df = new DocumentFragment();
+  df.appendChild(
+    cr.div({ class: 'modal-body' },
+      cr.h2('Edit input'),
+      cr.fieldset(
+        cr.label({ for: 'input-name' },
+            cr.p('Name'),
+            cr.input({ type: 'text', id: 'input-name', name: 'input-name', value: data.name })
+        )
+      ),
+      cr.fieldset(
+        cr.label(
+          cr.p('Icon'),
+          cr.div({ class: 'row' },
+            cr.label({ class: 'col-xs' }, getSVG('music', 'inline-block'), cr.input({ type: 'radio', value: 'music', name: 'input-icon' })),
+            cr.label({ class: 'col-xs' }, getSVG('radio', 'inline-block'), cr.input({ type: 'radio', value: 'radio', name: 'input-icon' })),
+            cr.label({ class: 'col-xs' }, getSVG('disc', 'inline-block'), cr.input({ type: 'radio', value: 'disc', name: 'input-icon' })),
+            cr.label({ class: 'col-xs' }, getSVG('laptop', 'inline-block'), cr.input({ type: 'radio', value: 'laptop', name: 'input-icon' })),
+            cr.label({ class: 'col-xs' }, getSVG('network', 'inline-block'), cr.input({ type: 'radio', value: 'network', name: 'input-icon' }))
+          )
+        )
+      ),
+      cr.fieldset(
+        cr.label({ class: 'check-container' }, 'Enabled',
+            cr.input({ type: 'checkbox', id: 'input-enabled' }),
+            cr.span({ class: 'checkmark' })
+        )
+      )
+    )
+  )
+  df.querySelectorAll('input[type="radio"]').forEach(v => {
+    if (v.value == data.icon) {
+      v.setAttribute('checked', 'checked')
+    }
+  })
+  if (data.enabled == true) {
+    df.querySelector('input[type="checkbox"]').setAttribute('checked', 'checked')
+  }
+  df.appendChild(
+    cr.div({ class: 'modal-footer two' },
+        cr.button({ class: 'cancel', on: { click: (e) => { hideModal(); } } }, 'Cancel'),
+        cr.button({ class: 'save', on: { click: () => { 
+          body = JSON.stringify({
+            input: parseInt(data.id),
+            name: document.querySelector('#input-name').value,
+            icon: document.querySelector('input[name="input-icon"]:checked').value,
+            enabled: ((document.querySelector('#input-enabled').checked == true) ? 1 : 0)
+          })
+          window.fetch('/api/input', { method: 'PUT', body: body })
+            .then(response => response.json())
+            .then(data => {
+              if (data.status == "ok") {
+                loadContent();
+                hideModal();
+              }
+            })
+        } } }, 'Save')
+    )
+  )
+  showModal(df)
+}
+
+function showModal(content) {
+  var mc = document.querySelector('#modal .modal-content')
+  while(mc.hasChildNodes()) {
+    mc.removeChild(mc.firstChild);
+  }
+  mc.appendChild(content)
+  document.getElementById('modal').classList.remove('hidden')
+}
+function hideModal() {
+  document.getElementById('modal').classList.add('hidden')
+}
+
 var getSVG = function (iconName, cls) {
   var svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svgElem.classList.add('icon')
@@ -82,7 +179,7 @@ var getSVG = function (iconName, cls) {
   svgElem.appendChild(useElem)
   if (cls) {
     cls.split(' ').forEach(c => svgElem.classList.add(c))
-  }
+  }a
   return svgElem
 }
 

@@ -2,7 +2,9 @@
 
 DeviceSettings sysSettings;
 
-String fw_version = "0.1.47";
+String fw_version = "0.1.52";
+
+int FlashCommit = 0;
 
 int muteState = 0;
 

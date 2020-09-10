@@ -67,6 +67,8 @@ typedef struct {
 
 extern DeviceSettings sysSettings;
 
+extern int FlashCommit;
+
 // FIRMWARE VERSION (THIS SW)
 extern String fw_version;
 
