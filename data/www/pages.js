@@ -68,9 +68,13 @@ function getContent(fragmentId, callback) {
                 cr.p('Screen too bright? Dim automatically after 10s')
               ),
               cr.div({ class: 'col-xs nogrow' },
-                cr.label({ class: 'switch pure-flex-middle-xs' },
-                  cr.input({ type: 'checkbox', id: 'dim-screen' }),
-                  cr.span({ class: 'slider round' })
+                //cr.label({ class: 'switch pure-flex-middle-xs' },
+                //  cr.input({ type: 'checkbox', id: 'dim-screen' }),
+                //  cr.span({ class: 'slider round' })
+                //)
+                cr.label({ class: 'check-container check-menu' },
+                  cr.input({ type: 'checkbox', id: 'input-enabled', checked: 'checked', on: { change: () => { setDim() } } }),
+                  cr.span({ class: 'checkmark' })
                 )
               )
             )

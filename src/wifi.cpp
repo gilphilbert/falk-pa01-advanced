@@ -167,6 +167,33 @@ void WiFiManager::begin() {
     return request->send(200, "application/json", retStr);
   });
 
+  server.on("/api/settings/dim", HTTP_POST, [](AsyncWebServerRequest *request){
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    if (doc.containsKey("state")) {
+      sysSettings.dim == ((doc["state"] == true) ? 1 : 0);
+      doc.clear();
+      doc["state"] = "failed";
+    } else {
+      doc.clear();
+      doc["state"] = "failed";
+      doc["message"] = "data missing: state";
+    }
+
+    //generate the string
+    String retStr;
+    serializeJson(doc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
+    String networks = WiFiManager::getNetworks();
+    return request->send(200, "application/json", networks);
+  });
+
   server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
     File appFile = SPIFFS.open("/version", "r");
     String app_version = appFile.readString();
@@ -182,11 +209,6 @@ void WiFiManager::begin() {
     String retStr;
     serializeJson(retObj, retStr);
     return request->send(200, "application/json", retStr);
-  });
-
-  server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
-    String networks = WiFiManager::getNetworks();
-    return request->send(200, "application/json", networks);
   });
   
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){

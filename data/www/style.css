@@ -1,14 +1,14 @@
 @font-face {
   font-family: 'Rubrik';
-  src: url('rubrik1_l.woff2') format('woff2'),
-       url('rubrik1_l.woff') format('woff');
+  src: url('fonts/rubrik1_l.woff2') format('woff2'),
+       url('fonts/rubrik1_l.woff') format('woff');
   font-weight: lighter;
   font-style: normal;
 }
 @font-face {
   font-family: 'Rubrik';
-  src: url('rubrik1.woff2') format('woff2'),
-       url('rubrik1.woff') format('woff');
+  src: url('fonts/rubrik1.woff2') format('woff2'),
+       url('fonts/rubrik1.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -307,6 +307,12 @@ fieldset p {
   -ms-user-select: none;
   user-select: none;
 }
+.check-container.check-menu {
+  padding-left: 0;
+  padding-right: 6px;
+  height: 34px;
+  width: 34px;
+}
 .check-container input {
   position: absolute;
   opacity: 0;
@@ -320,6 +326,14 @@ fieldset p {
   left: 0;
   height: 22px;
   width: 22px;
+  background-color: #6a6e73;
+}
+.check-container.check-menu .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 34px;
+  width: 34px;
   background-color: #6a6e73;
 }
 .check-container:hover input ~ .checkmark {
@@ -342,10 +356,17 @@ fieldset p {
   width: 3px;
   height: 8px;
   border: solid #FCFFFF;
-  border-width: 0 3px 3px 0;
+  border-width: 0 2px 2px 0;
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
+}
+.check-container.check-menu .checkmark:after {
+  left: 12px;
+  top: 7px;
+  width: 7px;
+  height: 13px;
+  border-width: 0 2px 2px 0;
 }
 .addon {
   display: flex;

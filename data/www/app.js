@@ -175,11 +175,11 @@ var getSVG = function (iconName, cls) {
   var svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svgElem.classList.add('icon')
   var useElem = document.createElementNS('http://www.w3.org/2000/svg', 'use')
-  useElem.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', 'icons/icons.svg#' + iconName)
+  useElem.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', 'img/icons.svg#' + iconName)
   svgElem.appendChild(useElem)
   if (cls) {
     cls.split(' ').forEach(c => svgElem.classList.add(c))
-  }a
+  }
   return svgElem
 }
 
@@ -228,6 +228,20 @@ function inputChange(el) {
           el.classList.remove("selected")
         }
       })
+    })
+}
+
+function setDim() {
+  body = JSON.stringify({
+    state: parseInt(document.getElementById('settings-dim').checked)
+  })
+  window.fetch('/api/settings/dim', { method: 'POST', body: body })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+    })
+    .catch(() => {
+      document.getElementById('settings-dim').checked = !document.getElementById('settings-dim').checked;
     })
 }
 
