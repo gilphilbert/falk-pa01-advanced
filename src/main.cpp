@@ -41,7 +41,9 @@ void setup(){
 
   //turn everything off, this gives us a chance to correctly set the volume to the max startup volume, if set
   relays.setInput(0);
-  relays.setVolume(0);
+  delay(5);
+  //relays.setVolume(0);
+  //delay(10);
 
   //start preferences
   preferences.begin("falk-pre", false);
