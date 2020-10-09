@@ -17,11 +17,10 @@
 class VolumeController {
   private:
     void volEncLoop(int m);
-    void endVolumePulse();
+    void endPulse();
   public:
     void begin(short min, short max);
-    void setVolume();
-    void setVolume(int volume);
+    void set(int volume);
     void loop();
 };
 

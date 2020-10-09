@@ -51,7 +51,7 @@ figure {
   cursor: pointer;
 }
 .inline-block {
-  display: inline-block;
+  display: inline-block!important;
 }
 
 span.button-round {

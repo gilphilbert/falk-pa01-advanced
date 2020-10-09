@@ -37,13 +37,12 @@ void setup(){
 	ESP32Encoder::useInternalWeakPullResistors=UP;
 
   //configure the MCP27013 ICs
-  relays.begin();
+  input.begin(INP_MAX);
+  volume.begin(VOL_MIN, VOL_MAX);
 
   //turn everything off, this gives us a chance to correctly set the volume to the max startup volume, if set
-  relays.setInput(0);
+  input.set(0);
   delay(5);
-  //relays.setVolume(0);
-  //delay(10);
 
   //start preferences
   preferences.begin("falk-pre", false);
@@ -75,8 +74,9 @@ void setup(){
 
   //the relays *should* match our stored values (since they're latching) but we can't be sure
   //so we set them to these values so the screen and relays match
-  relays.setVolume(sysSettings.volume);
-  relays.setInput(sysSettings.input);
+  //relays.set(sysSettings.volume);
+  volume.set(sysSettings.volume);
+  input.set(sysSettings.input);
 
   display.begin();
   display.updateScreen();
@@ -111,7 +111,7 @@ void muteLoop(int m) {
           //write to the screen
           display.updateScreen();
           //set the relays
-          relays.setVolume(sysSettings.volume);
+          volume.set(sysSettings.volume);
         }
       }
     }
@@ -141,19 +141,25 @@ void wifiLoop(int m) {
   }
 }
 
+
 void inputLoop(int m) {
-  int count = inpEnc.getCount();
-  if (count != sysSettings.input) {
-    if (count > INP_MAX) {
+  int count = inpEnc.getCount(); //get count from rotary encoder
+  if (count != sysSettings.input) { //if it's not our current setting
+    if (count > INP_MAX) { //make sure it's not out of bounds (upper, if so, set to min)
       count = INP_MIN;
-      inpEnc.setCount(INP_MIN);
-    } else if (count < INP_MIN) {
+    } else if (count < INP_MIN) { //make sure it's not out of bounds (lower, if so, set to max)
       count = INP_MAX;
-      inpEnc.setCount(INP_MAX);
     }
-    relays.setInput(count);
-    sysSettings.input = count;
-    display.updateScreen();
+    while (sysSettings.inputs[count - 1].enabled == false) { //is the input enabled? If not...
+      count++; //check the next one
+      if (count > INP_MAX) { //are we out of bounds? go to the min
+        count = INP_MIN;
+      }
+    }
+    inpEnc.setCount(count); //set the encoder (failsafe)
+    input.set(count); //set the input
+    sysSettings.input = count; //update system settings
+    display.updateScreen(); //paint the screen
     //set a delayed commit (this prevents us from wearing out the flash with each detent)
     FlashCommit = m;
   }
@@ -183,7 +189,7 @@ void volumeLoop(int m) {
       //write to the screen
       display.updateScreen();
       //set the relays
-      relays.setVolume(count);
+      volume.set(count);
       //set a delayed commit (this prevents us from wearing out the flash with each detent)
       FlashCommit = m;
     } else {
@@ -206,7 +212,8 @@ void loop() {
       FlashCommit = 0;
   }
 
-  relays.loop();
+  volume.loop();
+  input.loop();
   display.loop();
   wifi.loop();
 }

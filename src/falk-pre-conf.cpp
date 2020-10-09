@@ -8,7 +8,8 @@ int FlashCommit = 0;
 
 int muteState = 0;
 
-RelayController relays;
+InputController input;
+VolumeController volume;
 Display display;
 
 // for the volume rotary encoder

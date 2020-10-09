@@ -9,7 +9,7 @@ short vol_min = 0;
 
 void VolumeController::volEncLoop(int m) {
   if ((VolumeRelayPulseTime > 0) && (m > VolumeRelayPulseTime + RELAY_PULSE)) {
-    endVolumePulse();
+    endPulse();
   }
 }
 
@@ -31,7 +31,7 @@ void VolumeController::begin(short min, short max) {
   Wire.endTransmission();  //kill the connection
 }
 
-void VolumeController::setVolume(int volume) {
+void VolumeController::set(int volume) {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
   //select the "A" bank pins
@@ -51,7 +51,7 @@ void VolumeController::setVolume(int volume) {
   VolumeRelayPulseTime = millis();
 }
 
-void VolumeController::endVolumePulse() {
+void VolumeController::endPulse() {
   //select the volume GPIOs
   Wire.beginTransmission(MCP_VOLUME_ADDRESS);
   //select the "A" bank pins

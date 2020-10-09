@@ -265,6 +265,15 @@ void WiFiManager::loop() {
     }
 }
 
+bool WiFiManager::connect() {
+  if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
+    return false;
+  }
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(sysSettings.wifi.ssid.c_str(), sysSettings.wifi.pass.c_str());
+  return true;
+}
+
 void WiFiManager::enable() {
   WiFi.mode(WIFI_AP_STA);
   WiFi.enableSTA(false);

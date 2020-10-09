@@ -10,22 +10,17 @@
 #define MCP_PORTA_PINS          0x12
 #define MCP_PORTB_PINS          0x13
 
-#define MCP_VOLUME_ADDRESS      0x20
 #define MCP_INPUT_ADDRESS       0x21
 
 #define RELAY_PULSE             50
 
-class RelayController {
+class InputController {
   private:
     void inpEncLoop(int m);
-    void volEncLoop(int m);
-    void endInputPulse();
-    void endVolumePulse();
+    void endPulse();
   public:
-    void begin();
-    void setInput(int input);
-    void setVolume();
-    void setVolume(int volume);
+    void begin(short max);
+    void set(int input);
     void loop();
 };
 

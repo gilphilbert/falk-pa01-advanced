@@ -15,16 +15,16 @@ function loadContent () {
         window.fetch('/api/status')
           .then(response => response.json())
           .then(data => {
-            //document.getElementById('volume').value = Math.round((data.volume.current / data.volume.max) * 100)
             document.getElementById('volume').max = data.volume.max
             document.getElementById('volume').value = data.volume.current
             console.log(data)
-            if (data.inputs) {
+            var inpcont = document.getElementById('input-container')
+            if (data.inputs && inpcont.childElementCount == 0) {
               data.inputs.list.forEach((v) => {
-                document.getElementById('input-container').appendChild(
+                inpcont.appendChild(
                   cr.div({ class: 'col-xs-3' },
                     cr.div({ class: 'pointer input-box' + ((data.inputs.selected == v.id) ? ' selected' : ''), 'data-id': v.id, on: { click: function() { inputChange(this) } } },
-                      getSVG(v.icon),
+                      getSVG(v.icon, 'inline-block'),
                       cr.span(v.name)
                     )
                   )

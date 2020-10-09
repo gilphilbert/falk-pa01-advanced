@@ -166,8 +166,7 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'box' },
             cr.h2('Select a WiFi network:'),
             cr.div({ id: 'network-list' },
-              cr.p('Scanning...'),
-              getSVG('rotate-cw', 'spinner')
+              cr.p('Scanning...', getSVG('rotate-cw', 'spinner')),
             )
           )
         )

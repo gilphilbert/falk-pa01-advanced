@@ -19,6 +19,7 @@ class WiFiManager {
     void begin();
     void loop();
     const char* getSSID();
+    bool connect();
     void enable();
 };
 

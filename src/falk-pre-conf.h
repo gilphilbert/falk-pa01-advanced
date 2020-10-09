@@ -55,6 +55,11 @@ typedef struct {
 } DeviceInput;
 
 typedef struct {
+  String ssid = "";
+  String pass = "";
+} DeviceWifi;
+
+typedef struct {
   int16_t volume = 26;
   int16_t input = 1;
   DeviceInput inputs [INP_MAX];
@@ -63,6 +68,7 @@ typedef struct {
   int icon = 0;
   int maxVol = VOL_MAX;
   int maxStartVol = -1;
+  DeviceWifi wifi;
 } DeviceSettings;
 
 extern DeviceSettings sysSettings;
@@ -72,8 +78,11 @@ extern int FlashCommit;
 // FIRMWARE VERSION (THIS SW)
 extern String fw_version;
 
-#include "relays.h"
-extern RelayController relays;
+#include "relay-input.h"
+extern InputController input;
+
+#include "relay-volume.h"
+extern VolumeController volume;
 
 #include "display.h"
 extern Display display;
