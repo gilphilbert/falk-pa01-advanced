@@ -11,16 +11,17 @@
 #include "esp_int_wdt.h"
 #include "ArduinoJson.h"
 
+#define WIFI_TIMEOUT            60000
+
 class WiFiManager {
   private:
     String translateEncryptionType(wifi_auth_mode_t encryptionType);
     String getNetworks();
+    void loadServer();
   public:
-    void begin();
+    bool begin();
     void loop();
-    const char* getSSID();
-    bool connect();
-    void enable();
+    void enableAP();
 };
 
 #endif

@@ -15,6 +15,12 @@ TO DO:
 // OUR SYSTEM CONFIGURATION
 #include "falk-pre-conf.h"
 
+#include "relay-input.h"
+InputController input;
+
+#include "relay-volume.h"
+VolumeController volume;
+
 #include "wifi.h"
 WiFiManager wifi;
 
@@ -27,7 +33,6 @@ int muteDebounceTime = 0;
 
 // wifi settings
 int wifiButtonPressTime = 0;
-int wifiConnectTimeout = 0;
 uint8_t wifibuttonstate = HIGH;
 
 void setup(){	
@@ -81,11 +86,16 @@ void setup(){
   display.begin();
   display.updateScreen();
 
+  //setup the power control elements
+  pinMode(POWER_CONTROL, OUTPUT); //this is the power control for the 5V circuit
+  digitalWrite(POWER_CONTROL, HIGH); //set it high to power the 5V elements
+  pinMode(POWER_BUTTON, INPUT_PULLDOWN); //configure the power button
+  esp_sleep_enable_ext0_wakeup(POWER_BUTTON, 1); //let the power button wake the MCU
+
   //this is the input rotary encoder button. Needed to handle wifi enable
-  //pinMode(WIFI_BUTTON, INPUT_PULLUP);
   pinMode(WIFI_BUTTON, INPUT);
 
-  wifi.enable();
+  //wifi.enableAP();
 }
 
 void muteLoop(int m) {
@@ -130,15 +140,10 @@ void wifiLoop(int m) {
     }
     wifibuttonstate = reading;
   } else if ((reading == LOW) && (wifiButtonPressTime > 0) && (m > wifiButtonPressTime + BUTTON_LONG_PRESS)) {
-    wifi.enable();
+    wifi.enableAP();
     wifiButtonPressTime = 0;
   }
-
-  if ((wifiConnectTimeout > 0) && (m > wifiConnectTimeout + WIFI_TIMEOUT)) {
-    wifiConnectTimeout = 0;
-    WiFi.mode(WIFI_MODE_STA);
-    display.updateScreen();
-  }
+  wifi.loop();
 }
 
 
@@ -163,6 +168,7 @@ void inputLoop(int m) {
     //set a delayed commit (this prevents us from wearing out the flash with each detent)
     FlashCommit = m;
   }
+  input.loop();
 }
 
 void volumeLoop(int m) {
@@ -197,6 +203,39 @@ void volumeLoop(int m) {
       sysSettings.volume = count;
     }
   }
+  volume.loop();
+}
+
+int lastPowerButtonState = LOW;
+int powerButtonState = LOW;
+int powerDebounceTime = 0;
+void powerLoop(int m) {
+  int reading = digitalRead(POWER_BUTTON);
+
+  if (reading != lastPowerButtonState) {
+    powerDebounceTime = m;
+  }
+
+  if ((m - powerDebounceTime) > BUTTON_DEBOUNCE_DELAY) {
+    if (reading != powerButtonState) {
+      powerButtonState = reading;
+
+      if (powerButtonState == HIGH) {
+        //need to power down...
+        Serial.println("Going into sleep mode...");
+
+        // power off the 5V circuit
+        digitalWrite(POWER_CONTROL, LOW);
+        // put the display to sleep
+        display.off();
+        // wait quarter second (helps with debounce, otherwise the MCU wakes again...)
+        delay(250);
+        // zzzzzzzzzz
+        esp_deep_sleep_start();
+      }
+    }
+  }
+  lastPowerButtonState = reading;
 }
 
 void loop() {
@@ -206,14 +245,12 @@ void loop() {
   volumeLoop(m);
   muteLoop(m);
   wifiLoop(m);
+  powerLoop(m);
 
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
       preferences.putBytes("settings", &sysSettings, sizeof(DeviceSettings));
       FlashCommit = 0;
   }
 
-  volume.loop();
-  input.loop();
   display.loop();
-  wifi.loop();
 }

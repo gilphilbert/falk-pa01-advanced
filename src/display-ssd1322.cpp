@@ -1,4 +1,4 @@
-#include "display.h"
+#include "display-ssd1322.h"
 
 #include "falk-pre-conf.h"
 
@@ -52,6 +52,12 @@ void Display::updateScreen() {
   u8g2.drawStr(0, 9, "INPUT");
   u8g2.drawStr(x, 9, "VOLUME");
 
+  //include an icon for the wifi access point / wifi_connected
+  if (_access_point == true) {
+    u8g2.setFont(u8g2_font_open_iconic_www_1x_t);
+    u8g2.drawGlyph(124,9,0x48);
+  }
+
   //max brightness
   u8g2.setContrast(255);
   //write data to screen
@@ -66,7 +72,7 @@ void Display::wifiScreen(const char* ssid) {
   u8g2.clearBuffer();					// clear the internal memory
 
   u8g2.setFont(u8g2_font_open_iconic_www_2x_t);
-  u8g2.drawGlyph(120,19,0x51);
+  u8g2.drawGlyph(120,19,0x48);
 
   u8g2.setFont(u8g2_font_crox1h_tr);
   String string = "Search for this WiFi network";
@@ -75,9 +81,9 @@ void Display::wifiScreen(const char* ssid) {
   uint16_t y = 45;
   u8g2.drawStr(x, y, str);
 
-  u8g2.setFont(u8g2_font_tenthinnerguys_tr);
+  u8g2.setFont(u8g2_font_Born2bSportyV2_tr);
   x = 128 - (u8g2.getStrWidth(ssid) / 2);
-  y = 61;
+  y = 64;
   u8g2.drawStr(x, y, ssid);
 
   u8g2.setContrast(255);
@@ -88,4 +94,19 @@ void Display::wifiScreen(const char* ssid) {
 void Display::dimScreen() {
   u8g2.setContrast(1);
   screenTimer = 0;
+}
+
+void Display::off() {
+  u8g2.setPowerSave(1);
+}
+
+void Display::setAPMode(bool mode) {
+  _access_point = mode;
+  if (mode == false) {
+    Display::updateScreen();
+  }
+}
+
+void Display::wifiConnected(bool state) {
+  _wifi_state = state;
 }

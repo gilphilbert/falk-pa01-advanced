@@ -8,8 +8,7 @@ int FlashCommit = 0;
 
 int muteState = 0;
 
-InputController input;
-VolumeController volume;
+//the following need to be widely available since we need to be able to access them from wifi.cpp
 Display display;
 
 // for the volume rotary encoder

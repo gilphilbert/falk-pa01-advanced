@@ -19,8 +19,7 @@
 
 // ====== WIFI DEFAULTS ====== //
 
-#define WIFI_TIMEOUT            60000
-#define HOSTNAME                "falk.local"
+#define HOSTNAME                "falk-pa01"
 
 // ====== BUTTON SETTINGS ====== //
 
@@ -46,6 +45,9 @@
 
 #define VOL_ENCODER_A           26
 #define VOL_ENCODER_B           25
+
+#define POWER_BUTTON            GPIO_NUM_32
+#define POWER_CONTROL           GPIO_NUM_33
 
 // ====== SETTINGS (INCL. DEFAULTS) ====== //
 typedef struct {
@@ -78,13 +80,7 @@ extern int FlashCommit;
 // FIRMWARE VERSION (THIS SW)
 extern String fw_version;
 
-#include "relay-input.h"
-extern InputController input;
-
-#include "relay-volume.h"
-extern VolumeController volume;
-
-#include "display.h"
+#include "display-ssd1322.h"
 extern Display display;
 
 extern int muteState;

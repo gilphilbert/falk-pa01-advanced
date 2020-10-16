@@ -3,10 +3,123 @@
 
 AsyncWebServer server(80);
 bool shouldReboot = false;
+int wifiConnectTimeout = 0;
 
 const char* ssid = "FALK-PA01";
 
-void WiFiManager::begin() {
+void WiFiManager::loop() {
+    if (shouldReboot) {
+        yield();
+        delay(1000);
+        yield();
+        esp_task_wdt_init(1,true);
+        esp_task_wdt_add(NULL);
+        while(true);
+    }
+    if (wifiConnectTimeout > 0 && millis() > wifiConnectTimeout) {
+      wifiConnectTimeout = 0;
+      WiFi.mode(WIFI_MODE_STA);
+      display.setAPMode(false);
+      //display.updateScreen();
+    }
+}
+
+bool WiFiManager::begin() {
+  if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
+    return false;
+  }
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(sysSettings.wifi.ssid.c_str(), sysSettings.wifi.pass.c_str());
+
+  Serial.print("Connecting to Wifi");
+  int now = millis();
+  bool kill = false;
+  while (WiFi.isConnected() == false && kill == false) {
+    Serial.print(".");
+    delay(50);
+    if (millis() + 10000 > now) {
+      kill = true;
+    }
+  }
+  Serial.println();
+  MDNS.begin(HOSTNAME);
+
+  if (kill == true) {
+    Serial.println("Couldn't connect to Wifi");
+    return false;
+  }
+
+  WiFiManager::loadServer();
+  return true;
+}
+
+void WiFiManager::enableAP() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.enableSTA(false);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid);
+  IPAddress IP = WiFi.softAPIP();
+  MDNS.begin(HOSTNAME);
+
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+
+  display.setAPMode(true);
+  display.wifiScreen(ssid);
+
+  WiFiManager::loadServer();
+
+  wifiConnectTimeout = millis() + WIFI_TIMEOUT;
+}
+
+String WiFiManager::translateEncryptionType(wifi_auth_mode_t encryptionType) {
+  String encType = "Unknown";
+  switch (encryptionType) {
+    case (WIFI_AUTH_OPEN):
+      encType = "OPEN";
+    case (WIFI_AUTH_WEP):
+      encType = "WEP";
+    case (WIFI_AUTH_WPA_PSK):
+      encType = "WPA_PSK";
+    case (WIFI_AUTH_WPA2_PSK):
+      encType = "WPA2_PSK";
+    case (WIFI_AUTH_WPA_WPA2_PSK):
+      encType = "WPA_WPA2_PSK";
+    case (WIFI_AUTH_WPA2_ENTERPRISE):
+      encType = "WPA2_ENTERPRISE";
+    case (WIFI_AUTH_MAX):
+      encType = "MAX";
+  }
+  return encType;
+}
+
+String WiFiManager::getNetworks() {
+  int numberOfNetworks = WiFi.scanNetworks();
+ 
+  StaticJsonDocument<4000> doc;
+  JsonArray retArr = doc.to<JsonArray>();
+
+  for (int i = 0; i < numberOfNetworks; i++) {
+    JsonObject obj = retArr.createNestedObject();
+    obj["ssid"] = WiFi.SSID(i);
+    obj["signal"] = WiFi.RSSI(i);
+    obj["mac"] = WiFi.BSSIDstr(i);
+    obj["security"] = translateEncryptionType(WiFi.encryptionType(i));
+  }
+  //generate the string
+  String retStr;
+  serializeJson(retArr, retStr);
+  return retStr;
+}
+
+void extendTimeout() {
+  if (wifiConnectTimeout > 0) {
+    wifiConnectTimeout = millis() + (WIFI_TIMEOUT * 2);
+  }
+}
+
+void WiFiManager::loadServer() {
   if(!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -14,6 +127,8 @@ void WiFiManager::begin() {
 
   // API CONTENT
   server.on("/api/status", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
     // create a JSON object for the response
     StaticJsonDocument<800> doc;
     JsonObject retObj = doc.to<JsonObject>();
@@ -44,6 +159,7 @@ void WiFiManager::begin() {
   });
   
   server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
     // create a JSON object for the response
     StaticJsonDocument<200> doc;
     JsonObject retObj = doc.to<JsonObject>();
@@ -59,8 +175,11 @@ void WiFiManager::begin() {
   });
   
   server.on("/api/volume", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
 
@@ -83,6 +202,8 @@ void WiFiManager::begin() {
   });
 
   server.on("/api/inputs", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
     // create a JSON object for the response
     StaticJsonDocument<800> doc;
     JsonObject retObj = doc.to<JsonObject>();
@@ -104,8 +225,12 @@ void WiFiManager::begin() {
     return request->send(200, "application/json", retStr);
   });
   server.on("/api/input", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
 
@@ -126,8 +251,12 @@ void WiFiManager::begin() {
     return request->send(200, "application/json", retStr);
   });
   server.on("/api/input", HTTP_PUT, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
 
@@ -168,13 +297,17 @@ void WiFiManager::begin() {
   });
 
   server.on("/api/settings/dim", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
 
     if (doc.containsKey("state")) {
-      sysSettings.dim == ((doc["state"] == true) ? 1 : 0);
+      sysSettings.dim = ((doc["state"] == true) ? 1 : 0);
       doc.clear();
       doc["state"] = "failed";
     } else {
@@ -190,11 +323,15 @@ void WiFiManager::begin() {
   });
 
   server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
     String networks = WiFiManager::getNetworks();
     return request->send(200, "application/json", networks);
   });
 
   server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
     File appFile = SPIFFS.open("/version", "r");
     String app_version = appFile.readString();
     app_version = app_version.substring(0, app_version.length() -1);
@@ -212,11 +349,15 @@ void WiFiManager::begin() {
   });
   
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
     shouldReboot = !Update.hasError();
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot?"OK":"FAIL");
     response->addHeader("Connection", "close");
     request->send(response);
   },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+    extendTimeout();
+
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
       if (filename != "spiffs.bin" && filename != "firmware.bin") {
@@ -252,86 +393,4 @@ void WiFiManager::begin() {
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
-}
-
-void WiFiManager::loop() {
-    if(shouldReboot) {
-        yield();
-        delay(1000);
-        yield();
-        esp_task_wdt_init(1,true);
-        esp_task_wdt_add(NULL);
-        while(true);
-    }
-}
-
-bool WiFiManager::connect() {
-  if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
-    return false;
-  }
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(sysSettings.wifi.ssid.c_str(), sysSettings.wifi.pass.c_str());
-  return true;
-}
-
-void WiFiManager::enable() {
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.enableSTA(false);
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid);
-  IPAddress IP = WiFi.softAPIP();
-  MDNS.begin(HOSTNAME);
-
-  Serial.print("AP IP address: ");
-  Serial.println(IP);
-
-  display.wifiScreen(ssid);
-
-  WiFiManager::begin();
-
-  //wifiConnectTimeout = millis();
-}
-
-String WiFiManager::translateEncryptionType(wifi_auth_mode_t encryptionType) {
-  String encType = "Unknown";
-  switch (encryptionType) {
-    case (WIFI_AUTH_OPEN):
-      encType = "OPEN";
-    case (WIFI_AUTH_WEP):
-      encType = "WEP";
-    case (WIFI_AUTH_WPA_PSK):
-      encType = "WPA_PSK";
-    case (WIFI_AUTH_WPA2_PSK):
-      encType = "WPA2_PSK";
-    case (WIFI_AUTH_WPA_WPA2_PSK):
-      encType = "WPA_WPA2_PSK";
-    case (WIFI_AUTH_WPA2_ENTERPRISE):
-      encType = "WPA2_ENTERPRISE";
-    case (WIFI_AUTH_MAX):
-      encType = "MAX";
-  }
-  return encType;
-}
-
-String WiFiManager::getNetworks() {
-  int numberOfNetworks = WiFi.scanNetworks();
- 
-  //Serial.print("Number of networks found: ");
-  //Serial.println(numberOfNetworks);
-  StaticJsonDocument<4000> doc;
-  JsonArray retArr = doc.to<JsonArray>();
-
-  for (int i = 0; i < numberOfNetworks; i++) {
-    JsonObject obj = retArr.createNestedObject();
-    //Serial.print("Network name: ");
-    //Serial.println(WiFi.SSID(i));
-    obj["ssid"] = WiFi.SSID(i);
-    obj["signal"] = WiFi.RSSI(i);
-    obj["mac"] = WiFi.BSSIDstr(i);
-    obj["security"] = translateEncryptionType(WiFi.encryptionType(i));
-  }
-  //generate the string
-  String retStr;
-  serializeJson(retArr, retStr);
-  return retStr;
 }
