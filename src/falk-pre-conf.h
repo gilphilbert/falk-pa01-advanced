@@ -46,8 +46,8 @@
 #define VOL_ENCODER_A           26
 #define VOL_ENCODER_B           25
 
-#define POWER_BUTTON            GPIO_NUM_32
-#define POWER_CONTROL           GPIO_NUM_33
+#define POWER_BUTTON            GPIO_NUM_33
+#define POWER_CONTROL           GPIO_NUM_32
 
 // ====== SETTINGS (INCL. DEFAULTS) ====== //
 typedef struct {

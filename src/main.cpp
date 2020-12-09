@@ -38,8 +38,14 @@ uint8_t wifibuttonstate = HIGH;
 void setup(){	
 	Serial.begin(9600);
   Serial.println("Booting...");
-  //use the pullup resistors, this means we can connect ground to the encoders
-	ESP32Encoder::useInternalWeakPullResistors=UP;
+
+  //setup the power control elements
+  pinMode(POWER_CONTROL, OUTPUT); //this is the power control for the 5V circuit
+  digitalWrite(POWER_CONTROL, HIGH); //set it high to power the 5V elements
+  pinMode(POWER_BUTTON, INPUT_PULLDOWN); //configure the power button
+  esp_sleep_enable_ext0_wakeup(POWER_BUTTON, 1); //let the power button wake the MCU
+
+  delay(250);
 
   //configure the MCP27013 ICs
   input.begin(INP_MAX);
@@ -66,6 +72,9 @@ void setup(){
     sysSettings.volume = sysSettings.maxStartVol;
   }
 
+  //use the pullup resistors, this means we can connect ground to the encoders
+	ESP32Encoder::useInternalWeakPullResistors=UP;
+
   //configure the input encoder
   inpEnc.attachSingleEdge(INP_ENCODER_A, INP_ENCODER_B);
   inpEnc.setCount(sysSettings.input);
@@ -85,12 +94,6 @@ void setup(){
 
   display.begin();
   display.updateScreen();
-
-  //setup the power control elements
-  pinMode(POWER_CONTROL, OUTPUT); //this is the power control for the 5V circuit
-  digitalWrite(POWER_CONTROL, HIGH); //set it high to power the 5V elements
-  pinMode(POWER_BUTTON, INPUT_PULLDOWN); //configure the power button
-  esp_sleep_enable_ext0_wakeup(POWER_BUTTON, 1); //let the power button wake the MCU
 
   //this is the input rotary encoder button. Needed to handle wifi enable
   pinMode(WIFI_BUTTON, INPUT);
