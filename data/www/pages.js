@@ -73,7 +73,25 @@ function getContent(fragmentId, callback) {
                 //  cr.span({ class: 'slider round' })
                 //)
                 cr.label({ class: 'check-container check-menu' },
-                  cr.input({ type: 'checkbox', id: 'input-enabled', checked: 'checked', on: { change: () => { setDim() } } }),
+                  cr.input({ type: 'checkbox', id: 'settings-dim', checked: 'checked', on: { change: (e) => { setDim(e) } } }),
+                  cr.span({ class: 'checkmark' })
+                )
+              )
+            )
+          //)
+        )
+      ),
+      cr.div({ class: 'row' },
+        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
+          //cr.div({ class: 'box' },
+            cr.div({ class: 'row middle-xs' },
+              cr.div({ class: 'col-xs' },
+                cr.h2('Use Absolute Volume'),
+                cr.p('Use absolute volume instead of percentage')
+              ),
+              cr.div({ class: 'col-xs nogrow' },
+                cr.label({ class: 'check-container check-menu' },
+                  cr.input({ type: 'checkbox', id: 'settings-absolute-vol', checked: 'checked', on: { change: (e) => { setAbsoluteVolume(e) } } }),
                   cr.span({ class: 'checkmark' })
                 )
               )
@@ -120,7 +138,6 @@ function getContent(fragmentId, callback) {
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
           cr.a({ href: '#wifi' },
-            //cr.div({ class: 'box' },
               cr.div({ class: 'row middle-xs' },
                 cr.div({ class: 'col-xs' },
                   cr.h2('Wireless'),
@@ -130,7 +147,6 @@ function getContent(fragmentId, callback) {
                   cr.span({ class: 'button-round'}, getSVG('chevron-right'))
                 )
               )
-            //)
           )
         )
       ),

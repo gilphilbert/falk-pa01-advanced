@@ -231,9 +231,9 @@ function inputChange(el) {
     })
 }
 
-function setDim() {
+function setDim(e) {
   body = JSON.stringify({
-    state: parseInt(document.getElementById('settings-dim').checked)
+    state: ((e.target.checked==false) ? 0 : 1)
   })
   window.fetch('/api/settings/dim', { method: 'POST', body: body })
     .then(response => response.json())
@@ -241,7 +241,22 @@ function setDim() {
       console.log(data)
     })
     .catch(() => {
-      document.getElementById('settings-dim').checked = !document.getElementById('settings-dim').checked;
+      e.target.checked = !e.target.checked;
+    })
+}
+
+function setAbsoluteVolume(e) {
+  console.log(e);
+  body = JSON.stringify({
+    state: ((e.target.checked==false) ? 0 : 1)
+  })
+  window.fetch('/api/settings/absoluteVol', { method: 'POST', body: body })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+    })
+    .catch(() => {
+      e.target.checked = !e.target.checked;
     })
 }
 

@@ -70,6 +70,7 @@ typedef struct {
   int icon = 0;
   int maxVol = VOL_MAX;
   int maxStartVol = -1;
+  short absoluteVol = 0;
   DeviceWifi wifi;
 } DeviceSettings;
 

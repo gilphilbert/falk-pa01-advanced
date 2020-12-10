@@ -296,6 +296,26 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", retStr);
   });
 
+  // API CONTENT
+  server.on("/api/settings", HTTP_GET, [&](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // create a JSON object for the response
+    StaticJsonDocument<800> doc;
+    JsonObject retObj = doc.to<JsonObject>();
+
+    retObj["dim"] = sysSettings.dim;
+    retObj["maxVol"] = sysSettings.maxVol;
+    retObj["maxStartVol"] = sysSettings.maxStartVol;
+    retObj["absoluteVol"] = sysSettings.absoluteVol;
+
+    //generate the string
+    String retStr;
+    serializeJson(retObj, retStr);
+    //return the request
+    return request->send(200, "application/json", retStr);
+  });
+
   server.on("/api/settings/dim", HTTP_POST, [](AsyncWebServerRequest *request){
     extendTimeout();
 
@@ -307,14 +327,44 @@ void WiFiManager::loadServer() {
     deserializeJson(doc, (const char*) data);
 
     if (doc.containsKey("state")) {
-      sysSettings.dim = ((doc["state"] == true) ? 1 : 0);
+      sysSettings.dim = doc["state"];
       doc.clear();
-      doc["state"] = "failed";
+      doc["state"] = "success";
     } else {
       doc.clear();
       doc["state"] = "failed";
       doc["message"] = "data missing: state";
     }
+
+    display.updateScreen();
+
+    //generate the string
+    String retStr;
+    serializeJson(doc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/settings/absoluteVol", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    if (doc.containsKey("state")) {
+      sysSettings.absoluteVol = doc["state"];
+      doc.clear();
+      doc["state"] = "success";
+    } else {
+      doc.clear();
+      doc["state"] = "failed";
+      doc["message"] = "data missing: state";
+    }
+
+    display.updateScreen();
 
     //generate the string
     String retStr;
