@@ -2,6 +2,8 @@
 #include "falk-pre-conf.h"
 
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+
 bool shouldReboot = false;
 int wifiConnectTimeout = 0;
 
