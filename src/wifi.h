@@ -11,7 +11,7 @@
 #include "esp_int_wdt.h"
 #include "ArduinoJson.h"
 
-#define WIFI_TIMEOUT            60000
+#define WIFI_TIMEOUT            300000 // timeout for 5 minutes
 
 class WiFiManager {
   private:
@@ -22,6 +22,8 @@ class WiFiManager {
     bool begin();
     void loop();
     void enableAP();
+    void sendEvent(String event, String value);
+    void sendEvent(String event, int value);
 };
 
 #endif

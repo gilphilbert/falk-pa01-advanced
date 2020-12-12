@@ -2,7 +2,7 @@
 #include "falk-pre-conf.h"
 
 AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+AsyncEventSource events("/events");
 
 bool shouldReboot = false;
 int wifiConnectTimeout = 0;
@@ -10,6 +10,7 @@ int wifiConnectTimeout = 0;
 const char* ssid = "FALK-PA01";
 
 void WiFiManager::loop() {
+  
     if (shouldReboot) {
         yield();
         delay(1000);
@@ -53,6 +54,7 @@ bool WiFiManager::begin() {
   }
 
   WiFiManager::loadServer();
+
   return true;
 }
 
@@ -117,7 +119,7 @@ String WiFiManager::getNetworks() {
 
 void extendTimeout() {
   if (wifiConnectTimeout > 0) {
-    wifiConnectTimeout = millis() + (WIFI_TIMEOUT * 2);
+    wifiConnectTimeout = millis() + WIFI_TIMEOUT;
   }
 }
 
@@ -137,42 +139,34 @@ void WiFiManager::loadServer() {
 
     //generate the volume object
     JsonObject volObj = retObj.createNestedObject("volume");
-    volObj["max"] = VOL_MAX;
     volObj["current"] = sysSettings.volume;
+    volObj["max"] = VOL_MAX;
+    volObj["maxAllowedVol"] = sysSettings.maxVol;
+    volObj["maxStartVol"] = sysSettings.maxStartVol;
     
-    //generate the inputs object
-    JsonObject inpObj = retObj.createNestedObject("inputs");
-    inpObj["selected"] = sysSettings.input - 1;
-    JsonArray inpList = inpObj.createNestedArray("list");
+    JsonArray inpList = retObj.createNestedArray("inputs");
     for (int i = 0; i < INP_MAX; i++) {
-      if (sysSettings.inputs[i].enabled == 1) {
-        JsonObject io = inpList.createNestedObject();
-        io["id"] = i + 1;
-        io["name"] = sysSettings.inputs[i].name;
-        io["icon"] = sysSettings.inputs[i].icon;
-      }
+      JsonObject io = inpList.createNestedObject();
+      io["id"] = i + 1;
+      io["name"] = sysSettings.inputs[i].name;
+      io["icon"] = sysSettings.inputs[i].icon;
+      io["selected"] = (sysSettings.input == i + 1) ? true : false;
+      io["enabled"] = sysSettings.inputs[i].enabled;
     }
+
+    //generate the inputs object
+    JsonObject setObj = retObj.createNestedObject("settings");
+    setObj["dim"] = sysSettings.dim;
+    setObj["absoluteVol"] = sysSettings.absoluteVol;
+    setObj["wifi_ssid"] = sysSettings.wifi.ssid;
+    
+    JsonObject fwObj = retObj.createNestedObject("firmware");
+    fwObj["fw"] = fw_version;
 
     //generate the string
     String retStr;
     serializeJson(retObj, retStr);
     //return the request
-    return request->send(200, "application/json", retStr);
-  });
-  
-  server.on("/api/volume", HTTP_GET, [&](AsyncWebServerRequest *request){
-    extendTimeout();
-    // create a JSON object for the response
-    StaticJsonDocument<200> doc;
-    JsonObject retObj = doc.to<JsonObject>();
-
-    // write the volume variables
-    retObj["max"] = VOL_MAX;
-    retObj["current"] = sysSettings.volume;
-
-    //generate the string
-    String retStr;
-    serializeJson(retObj, retStr);
     return request->send(200, "application/json", retStr);
   });
   
@@ -203,29 +197,6 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", retStr);
   });
 
-  server.on("/api/inputs", HTTP_GET, [&](AsyncWebServerRequest *request){
-    extendTimeout();
-
-    // create a JSON object for the response
-    StaticJsonDocument<800> doc;
-    JsonObject retObj = doc.to<JsonObject>();
-
-    //generate the inputs object
-    JsonArray inpList = retObj.createNestedArray("list");
-    for (int i = 0; i < INP_MAX; i++) {
-      JsonObject io = inpList.createNestedObject();
-      io["id"] = i + 1;
-      io["name"] = sysSettings.inputs[i].name;
-      io["icon"] = sysSettings.inputs[i].icon;
-      io["enabled"] = sysSettings.inputs[i].enabled;
-    }
-
-    //generate the string
-    String retStr;
-    serializeJson(retObj, retStr);
-    //return the request
-    return request->send(200, "application/json", retStr);
-  });
   server.on("/api/input", HTTP_POST, [](AsyncWebServerRequest *request){
     extendTimeout();
 
@@ -298,26 +269,6 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", retStr);
   });
 
-  // API CONTENT
-  server.on("/api/settings", HTTP_GET, [&](AsyncWebServerRequest *request){
-    extendTimeout();
-
-    // create a JSON object for the response
-    StaticJsonDocument<800> doc;
-    JsonObject retObj = doc.to<JsonObject>();
-
-    retObj["dim"] = sysSettings.dim;
-    retObj["maxVol"] = sysSettings.maxVol;
-    retObj["maxStartVol"] = sysSettings.maxStartVol;
-    retObj["absoluteVol"] = sysSettings.absoluteVol;
-
-    //generate the string
-    String retStr;
-    serializeJson(retObj, retStr);
-    //return the request
-    return request->send(200, "application/json", retStr);
-  });
-
   server.on("/api/settings/dim", HTTP_POST, [](AsyncWebServerRequest *request){
     extendTimeout();
 
@@ -380,25 +331,6 @@ void WiFiManager::loadServer() {
     String networks = WiFiManager::getNetworks();
     return request->send(200, "application/json", networks);
   });
-
-  server.on("/api/firmware", HTTP_GET, [&](AsyncWebServerRequest *request){
-    extendTimeout();
-
-    File appFile = SPIFFS.open("/version", "r");
-    String app_version = appFile.readString();
-    app_version = app_version.substring(0, app_version.length() -1);
-    
-    // create a JSON object for the response
-    StaticJsonDocument<200> doc;
-    JsonObject retObj = doc.to<JsonObject>();
-    retObj["fw"] = fw_version;
-    retObj["app"] = app_version;
-
-    //generate the string
-    String retStr;
-    serializeJson(retObj, retStr);
-    return request->send(200, "application/json", retStr);
-  });
   
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
     extendTimeout();
@@ -440,9 +372,30 @@ void WiFiManager::loadServer() {
     }
   });
 
+  server.addHandler(&events);
 
   //server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
   server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
+}
+
+/* event stuff */
+
+void WiFiManager::sendEvent(String event, String value) {    // create a JSON object for the response
+  StaticJsonDocument<200> doc;
+  JsonObject retObj = doc.to<JsonObject>();
+  retObj[event] = value;
+  String retStr;
+  serializeJson(retObj, retStr);
+  events.send(retStr.c_str(),"message",millis());
+}
+
+void WiFiManager::sendEvent(String event, int value) {
+  StaticJsonDocument<200> doc;
+  JsonObject retObj = doc.to<JsonObject>();
+  retObj[event] = value;
+  String retStr;
+  serializeJson(retObj, retStr);
+  events.send(retStr.c_str(),"message",millis());
 }

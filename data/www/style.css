@@ -1,14 +1,12 @@
 @font-face {
   font-family: 'Rubrik';
-  src: url('fonts/rubrik1_l.woff2') format('woff2'),
-       url('fonts/rubrik1_l.woff') format('woff');
+  src: url('fonts/rubrik1_l.woff2') format('woff2');
   font-weight: lighter;
   font-style: normal;
 }
 @font-face {
   font-family: 'Rubrik';
-  src: url('fonts/rubrik1.woff2') format('woff2'),
-       url('fonts/rubrik1.woff') format('woff');
+  src: url('fonts/rubrik1.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }

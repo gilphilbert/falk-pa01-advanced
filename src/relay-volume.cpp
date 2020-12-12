@@ -47,7 +47,7 @@ void VolumeController::set(int volume) {
   //set volume
   Wire.write(vol_max - volume);
   //kill session
-  Serial.println(Wire.endTransmission());
+  Wire.endTransmission();
   VolumeRelayPulseTime = millis();
 }
 

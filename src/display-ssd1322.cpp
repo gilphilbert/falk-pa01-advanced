@@ -105,6 +105,28 @@ void Display::wifiScreen(const char* ssid) {
   u8g2.sendBuffer();
 }
 
+void firmwareUpdate() {
+  u8g2.clearBuffer();					// clear the internal memory
+
+  u8g2.setFont(u8g2_font_open_iconic_www_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
+  u8g2.drawGlyph(120,19,0x48);
+
+  u8g2.setFont(u8g2_font_crox1h_tr);
+  String string = "Updating Firmware";
+  const char* str = string.c_str();
+  uint16_t x = 128 - (u8g2.getStrWidth(str) / 2);
+  uint16_t y = 45;
+  u8g2.drawStr(x, y, str);
+
+  string = "Please wait";
+  x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
+  y = SCREEN_HEIGHT;
+  u8g2.drawStr(x, y, string.c_str());
+
+  u8g2.setContrast(255);
+  u8g2.sendBuffer();
+}
+
 //called after the timeout elapses, drops screen brightness
 void Display::dimScreen() {
   u8g2.setContrast(1);

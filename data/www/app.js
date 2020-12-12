@@ -1,3 +1,5 @@
+var sysStatus = {};
+
 function loadContent () {
   var contentDiv = document.getElementById('app')
   var fragmentId = window.location.hash.substr(1)
@@ -11,63 +13,6 @@ function loadContent () {
 
     // get any data relevant for this page
     switch (fragmentId) {
-      case 'main':
-        window.fetch('/api/status')
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById('volume').max = data.volume.max
-            document.getElementById('volume').value = data.volume.current
-            console.log(data)
-            var inpcont = document.getElementById('input-container')
-            if (data.inputs && inpcont.childElementCount == 0) {
-              data.inputs.list.forEach((v) => {
-                inpcont.appendChild(
-                  cr.div({ class: 'col-xs-3' },
-                    cr.div({ class: 'pointer input-box' + ((data.inputs.selected == v.id) ? ' selected' : ''), 'data-id': v.id, on: { click: function() { inputChange(this) } } },
-                      getSVG(v.icon, 'inline-block'),
-                      cr.span(v.name)
-                    )
-                  )
-                )
-              })
-            }
-          })
-        break
-        case 'inputs':
-          window.fetch('/api/inputs')
-            .then(response => response.json())
-            .then(data => {
-              console.log(data)
-              if(data.list) {
-                var df = new DocumentFragment;
-                data.list.forEach(v => {
-                  df.appendChild(
-                    cr.div({ class: 'row middle-xs padded' + ((v.enabled) ? '' : ' disabled'), 'data-id': v.id, 'data-name': v.name, 'data-icon': v.icon, 'data-enabled': v.enabled },
-                      cr.div({ class: 'col-xs nogrow' },
-                        getSVG(v.icon)
-                      ),
-                      cr.div({ class: 'col-xs' },
-                        v.name
-                      ),
-                      cr.div({ class: 'col-xs nogrow' },
-                        cr.span({ class: 'button-round sm', on: { click: (e) => { showModalInput(e); } } }, getSVG('settings'))
-                      )
-                    )
-                  )
-                })
-                document.getElementById('input-list').childNodes.forEach(v => { v.remove() })
-                document.getElementById('input-list').appendChild(df)
-              }
-            })
-          break
-          case 'firmware':
-            window.fetch('/api/firmware')
-              .then(response => response.json())
-              .then(data => {
-                document.getElementById('firmware-version').innerText = data.fw
-                document.getElementById('application-version').innerText = data.app
-              })
-            break
         case 'wifi':
           window.fetch('/api/networks')
             .then(response => response.json())
@@ -317,7 +262,65 @@ window.addEventListener('DOMContentLoaded', (event) => {
     window.location.hash = '#main'
   }
 
-  loadContent()
+  if (!!window.EventSource) {
+    var source = new EventSource('/events');
+  
+    source.addEventListener('open', function(e) {
+      console.log("Subscribed to events");
+    }, false);
+  
+    source.addEventListener('error', function(e) {
+      if (e.target.readyState != EventSource.OPEN) {
+        console.log("Disconnected from event server");
+      }
+    }, false);
+  
+    source.addEventListener('message', function(e) {
+      var obj = JSON.parse(e.data);
+      var key = Object.keys(obj)[0];
+      switch(key) {
 
-  window.addEventListener('hashchange', loadContent)
+        case 'volume':
+          sysStatus.volume.current = obj[key];
+          var el =document.querySelector("#volume");
+          if (el != null) {
+            el.value = obj[key]
+          }
+          break;
+
+        case 'input':
+          for(var i = 0; i < sysStatus.inputs.length; i++) {
+            if (obj[key] == sysStatus.inputs[i].id) {
+              sysStatus.inputs[i].selected = true
+            } else {
+              sysStatus.inputs[i].selected = false
+            }
+          }
+          var el =document.querySelectorAll("#input-container .input-box");
+          if (el != null) {
+            el.forEach(e => {
+              if (sysStatus.inputs[e.dataset.id - 1].selected) {
+                e.classList.add("selected")
+              } else {
+                e.classList.remove("selected")
+              }
+            })
+          }
+          break;
+
+        default:
+          console.log("message", e.data);
+      }
+    }, false);
+  }
+
+  window.fetch('/api/status')
+  .then(response => response.json())
+  .then(data => {
+      sysStatus = data
+      console.log(sysStatus)
+      loadContent()
+      window.addEventListener('hashchange', loadContent)
+    }
+  )
 })

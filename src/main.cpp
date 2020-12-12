@@ -35,6 +35,60 @@ int muteDebounceTime = 0;
 int wifiButtonPressTime = 0;
 uint8_t wifibuttonstate = HIGH;
 
+void spiffsUpdate() {
+  const char* fwfile = "/firmware.bin";
+
+  // try to open SPIFFS
+  if(!SPIFFS.begin(true)){
+    Serial.println("Can't open SPIFFS");
+    return;
+  }
+
+  // check to see if there's a firmware file
+  if(!SPIFFS.exists(fwfile)) {
+    Serial.println("No firmware available");
+    return;
+  }
+
+  // try to open the file
+  File file = SPIFFS.open(fwfile);
+  if(!file){
+    Serial.println("Can't open firmware");
+    return;
+  }
+
+  // check to see if the update was accurate
+  size_t fileSize = file.size();
+  Serial.println(fileSize);
+  if(!Update.begin(fileSize)){
+    Serial.println("Not enough space to update");
+    return;
+  }
+
+  display.firmwareUpdate();
+
+  // update the firmware
+  Update.writeStream(file);
+
+  // check to see if the update was successful
+  if(Update.end()){
+    Serial.println("Update complete");
+  } else {
+    Serial.println("Update failed");
+  }
+  file.close();
+
+  // remove the firmware we've updated
+  delay(500);
+  SPIFFS.remove(fwfile);
+
+  // delay seems to help with file removal
+  delay(2000);
+
+  // restart the MCU
+  ESP.restart();
+}
+
 void setup(){	
 	Serial.begin(9600);
   Serial.println("Booting...");
@@ -54,6 +108,11 @@ void setup(){
   //turn everything off, this gives us a chance to correctly set the volume to the max startup volume, if set
   input.set(0);
   delay(5);
+
+  //start the display controller
+  display.begin();
+
+  spiffsUpdate();
 
   //start preferences
   preferences.begin("falk-pre", false);
@@ -92,11 +151,11 @@ void setup(){
   volume.set(sysSettings.volume);
   input.set(sysSettings.input);
 
-  display.begin();
-  display.updateScreen();
-
   //this is the input rotary encoder button. Needed to handle wifi enable
   pinMode(WIFI_BUTTON, INPUT);
+
+  //update the display
+  display.updateScreen();
 
   //wifi.enableAP();
 }
@@ -117,6 +176,9 @@ void muteLoop(int m) {
           muteState = 1;
           volEnc.setCount(0);
           volEnc.pauseCount();
+          //write to the screen
+          display.updateScreen();
+          wifi.sendEvent("mute", true);
         } else {
           muteState = 0;
           volEnc.resumeCount();
@@ -125,6 +187,7 @@ void muteLoop(int m) {
           display.updateScreen();
           //set the relays
           volume.set(sysSettings.volume);
+          wifi.sendEvent("mute", false);
         }
       }
     }
@@ -135,7 +198,6 @@ void muteLoop(int m) {
 void wifiLoop(int m) {
   int reading = digitalRead(WIFI_BUTTON);
   if (reading != wifibuttonstate) {
-    Serial.println(reading);
     if (reading == LOW) {
       wifiButtonPressTime = m;
     } else {
@@ -169,41 +231,43 @@ void inputLoop(int m) {
     sysSettings.input = count; //update system settings
     display.updateScreen(); //paint the screen
     //set a delayed commit (this prevents us from wearing out the flash with each detent)
+    wifi.sendEvent("input", count);
     FlashCommit = m;
   }
   input.loop();
 }
 
 void volumeLoop(int m) {
-  //gets the current volume, checks to see if it's changed and sets the new volume
-  int count = volEnc.getCount();
-  if (count != sysSettings.volume) {
-    //if we're outside the limts, override with the limits
-    //we don't use VOL_MAX here, because we want to use the user-set limit
-    if (count > sysSettings.maxVol) {
-      //restore back to the maximum volume
-      volEnc.setCount(sysSettings.maxVol);
-      count = sysSettings.maxVol;
-    } else if (count < VOL_MIN) {
-      //restore back to the minimum volume
-      volEnc.setCount(VOL_MIN);
-      count = VOL_MIN;
-    }
-    //check again (in case we reset to be inside the limits)
+  if (muteState == 0) {
+    //gets the current volume, checks to see if it's changed and sets the new volume
+    int count = volEnc.getCount();
     if (count != sysSettings.volume) {
-      //save the new volume, as long as we're not going into mute
-      if (muteState == 0) {
+      //if we're outside the limts, override with the limits
+      //we don't use VOL_MAX here, because we want to use the user-set limit
+      if (count > sysSettings.maxVol) {
+        //restore back to the maximum volume
+        volEnc.setCount(sysSettings.maxVol);
+        count = sysSettings.maxVol;
+      } else if (count < VOL_MIN) {
+        //restore back to the minimum volume
+        volEnc.setCount(VOL_MIN);
+        count = VOL_MIN;
+      }
+      //check again (in case we reset to be inside the limits)
+      if (count != sysSettings.volume) {
+        //save the new volume, as long as we're not going into mute
+        sysSettings.volume = count;
+        //write to the screen
+        display.updateScreen();
+        //set the relays
+        volume.set(count);
+        wifi.sendEvent("volume", count);
+        //set a delayed commit (this prevents us from wearing out the flash with each detent)
+        FlashCommit = m;
+      } else {
+        //just save the new volume
         sysSettings.volume = count;
       }
-      //write to the screen
-      display.updateScreen();
-      //set the relays
-      volume.set(count);
-      //set a delayed commit (this prevents us from wearing out the flash with each detent)
-      FlashCommit = m;
-    } else {
-      //just save the new volume
-      sysSettings.volume = count;
     }
   }
   volume.loop();

@@ -15,6 +15,8 @@ class Display {
     void setDisplay(bool);
     void setAPMode(bool);
     void wifiConnected(bool);
+
+    void firmwareUpdate();
 };
 
 #endif

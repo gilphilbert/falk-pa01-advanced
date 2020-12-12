@@ -29,21 +29,17 @@ void InputController::begin(short max) {
 };
 
 void InputController::set(int input) {
-  Serial.print("Setting input to");
-  Serial.println(input);
   uint8_t setVal = 1;
   for (uint8_t i = 1; i < input; i++) {
     setVal = setVal * 2;
   }
 
-  Serial.println(setVal);
   //select the volume GPIOs
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   Wire.write(MCP_PORTA_PINS);
   Wire.write(setVal);
   Wire.endTransmission();  //kill the connection
 
-  Serial.println(255-setVal);
   Wire.beginTransmission(MCP_INPUT_ADDRESS);
   Wire.write(MCP_PORTB_PINS);
   Wire.write(255 - setVal);
