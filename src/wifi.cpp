@@ -332,6 +332,7 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", networks);
   });
   
+  //<!-------------------------------------------------------------------- TURN OFF 5V LINE BEFORE UPDATING
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
     extendTimeout();
 
