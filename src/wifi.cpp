@@ -332,7 +332,6 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", networks);
   });
   
-  //<!-------------------------------------------------------------------- TURN OFF 5V LINE BEFORE UPDATING
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){
     extendTimeout();
 
@@ -354,6 +353,12 @@ void WiFiManager::loadServer() {
         return request->send(200, "text/plain", "OTA could not begin");
       }
     }
+    display.firmwareUpload();
+    //switch off power to peripherals
+    inpEnc.pauseCount();
+    volEnc.pauseCount();
+    digitalWrite(POWER_CONTROL, LOW);
+
     if(!Update.hasError()){
       if(Update.write(data, len) != len){
         Update.printError(Serial);

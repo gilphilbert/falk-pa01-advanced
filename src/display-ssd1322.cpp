@@ -105,7 +105,7 @@ void Display::wifiScreen(const char* ssid) {
   u8g2.sendBuffer();
 }
 
-void firmwareUpdate() {
+void Display::firmwareUpdate() {
   u8g2.clearBuffer();					// clear the internal memory
 
   u8g2.setFont(u8g2_font_open_iconic_embedded_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
@@ -127,7 +127,7 @@ void firmwareUpdate() {
   u8g2.sendBuffer();
 }
 
-void firmwareUpload() {
+void Display::firmwareUpload() {
   u8g2.clearBuffer();					// clear the internal memory
 
   u8g2.setFont(u8g2_font_open_iconic_www_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!

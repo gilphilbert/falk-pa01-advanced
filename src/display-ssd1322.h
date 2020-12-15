@@ -17,6 +17,7 @@ class Display {
     void wifiConnected(bool);
 
     void firmwareUpdate();
+    void firmwareUpload();
 };
 
 #endif

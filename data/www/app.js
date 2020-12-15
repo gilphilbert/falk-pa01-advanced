@@ -1,4 +1,4 @@
-const debugmode = true;
+const debugmode = false;
 
 var sysStatus = {};
 
@@ -15,20 +15,20 @@ function loadContent () {
 
     // get any data relevant for this page
     switch (fragmentId) {
-        case 'wifi':
+        case 'wireless':
           window.fetch('/api/networks')
             .then(response => response.json())
             .then(data => {
               var df = new DocumentFragment;
               data.forEach(v => {
-                console.log(v)
+                var w = getWiFiDetail(v.signal, v.security);
                 df.appendChild(
-                  cr.div({ class: 'row middle-xs padded' },
-                    cr.div({ class: 'col-xs nogrow' },
-                      getSVG(getWifiIcon(v.signal, v.security), 'icon-sm')
+                  crel.div({ class: 'row middle-xs padded' },
+                    cr.div({ class: 'col-xs col-xs-middle nogrow' },
+                      getSVG(w.icon, 'no-stroke')
                     ),
                     cr.div({ class: 'col-xs' },
-                      v.ssid
+                      cr.h4(v.ssid),cr.p({class:'text-sm'}, w.text)
                     )
                   )
                 )
@@ -119,41 +119,24 @@ function hideModal() {
 }
 
 function getSVG(name, cls) {
-  var data = window.icons['pre'] + window.icons[name] + window.icons['post'];
-  var el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  var data = window.icons['pre'] + window.icons[name] + window.icons['post']
+  var el = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  //el.setAttribute('viewbox', '0 0 24 24')
+  el.classList.add('icon')
 
-  const parser = new DOMParser();
-  const parsed = parser.parseFromString(data, 'image/svg+xml');
+  const parser = new DOMParser()
+  const parsed = parser.parseFromString(data, 'image/svg+xml')
 
-  let svg = parsed.getElementsByTagName('svg');
-  if (svg.length) {
-      svg = svg[0];
+  let svg = parsed.getElementsByTagName('svg')[0]
 
-      const attr = svg.attributes;
-      const attrLen = attr.length;
-      for (let i = 0; i < attrLen; ++i) {
-          if (attr[i].specified) {
-              if ('class' === attr[i].name) {
-                  const classes = attr[i].value.replace(/\s+/g, ' ').trim().split(' ');
-                  const classesLen = classes.length;
-                  for (let j = 0; j < classesLen; ++j) {
-                      el.classList.add(classes[j]);
-                  }
-              }
-              else {
-                  el.setAttribute(attr[i].name, attr[i].value);
-              }
-          }
-      }
-
-      while (svg.childNodes.length) {
-          el.appendChild(svg.childNodes[0]);
-      }
-
-      if (cls) {
-        cls.split(' ').forEach(c => el.classList.add(c))
-      }
+  while (svg.childNodes.length) {
+    el.appendChild(svg.childNodes[0])
   }
+
+  if (cls) {
+    cls.split(' ').forEach(c => el.classList.add(c))
+  }
+
   return el
 }
 
@@ -175,6 +158,32 @@ function getWifiIcon(rssi, secure) {
   }
   return icon
 }
+function getWiFiDetail(rssi, secure) {
+  var icon = 'wifi-'
+  var str = 'Signal: '
+  if (rssi >= -30) {
+    icon += '4'
+    str += 'Great'
+  } else if (rssi >= -67) {
+    icon += '3'
+    str += 'Good'
+  } else if (rssi >= -70) {
+    icon += '2'
+    str += 'Average'
+  } else if (rssi >= -80) {
+    icon += '1'
+    str += 'Poor'
+  } else {
+    icon += '0'
+    str += 'Bad'
+  }
+  if (secure != "OPEN") {
+    icon += '-secure'
+  } else {
+    str += ' (Open)'
+  }
+  return { icon: icon, text: str }
+}
 
 function volumeChange(e) {
   body = JSON.stringify({
@@ -195,13 +204,6 @@ function inputChange(el) {
     .then(response => response.json())
     .then(data => {
       console.log(data)
-      //document.querySelectorAll('.input-box').forEach((el) => {
-      //  if (el.dataset['id'] == data.selected) {
-      //    el.classList.add("selected")
-      //  } else {
-      //    el.classList.remove("selected")
-      //  }
-      //})
     })
 }
 
@@ -220,7 +222,6 @@ function setDim(e) {
 }
 
 function setAbsoluteVolume(e) {
-  console.log(e);
   body = JSON.stringify({
     state: ((e.target.checked==false) ? 0 : 1)
   })
@@ -250,10 +251,6 @@ function uploadOTA (event) {
     document.getElementById('error-message').innerHTML = "Invalid firmware file! Select either <strong>firmware.bin</strong> or <strong>application.bin</strong>"
     document.getElementById('error-container').classList.remove('hidden');
     return;
-  } else if (this.file.name == 'firmware.bin') {
-    document.getElementById('update-type').innerText = "firmware"
-  } else {
-    document.getElementById('update-type').innerText = "application"
   }
   document.getElementById('error-container').classList.add('hidden');
   formData.append(this.type, this.file, this.type)
@@ -292,7 +289,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
   }
 
   if (debugmode) {
-    sysStatus = {"volume":{"current":68,"max":255,"maxAllowedVol":255,"maxStartVol":-1},"inputs":[{"id":1,"name":"CD","icon":"disc","selected":true,"enabled":1},{"id":2,"name":"Input 2","icon":"disc","selected":false,"enabled":1},{"id":3,"name":"Input 3","icon":"disc","selected":false,"enabled":1},{"id":4,"name":"Input 4","icon":"disc","selected":false,"enabled":1}],"settings":{"dim":1,"absoluteVol":1,"wifi_ssid":""},"firmware":{"fw":"0.1.10"}}
+    sysStatus = {"volume":{"current":68,"max":255,"maxAllowedVol":255,"maxStartVol":255},"inputs":[{"id":1,"name":"CD","icon":"disc","selected":true,"enabled":1},{"id":2,"name":"Input 2","icon":"disc","selected":false,"enabled":1},{"id":3,"name":"Input 3","icon":"disc","selected":false,"enabled":1},{"id":4,"name":"Input 4","icon":"disc","selected":false,"enabled":1}],"settings":{"dim":0,"absoluteVol":1,"wifi_ssid":""},"firmware":{"fw":"0.1.10"}}
     loadContent()
     window.addEventListener('hashchange', loadContent)
   } else {

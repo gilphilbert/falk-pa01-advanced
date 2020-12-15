@@ -28,7 +28,7 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'row center-content', id: 'input-container' },
             sysStatus.inputs.map(e => {
               if (e.enabled == true) {
-                return cr.div({ class: 'col-xs-4 col-md-3' },
+                return cr.div({ class: 'col-xs-6 col-md-3' },
                   cr.div({ class: 'pointer input-box' + ((e.selected) ? ' selected' : ''), 'data-id': e.id, on: { click: function() { inputChange(this) } } },
                     getSVG(e.icon, 'inline-block'),
                     cr.span(e.name),
@@ -71,7 +71,7 @@ function getContent(fragmentId, callback) {
                     v.name
                   ),
                   cr.td({ class: "shrink" },
-                    cr.span({ class: 'pointer', on: { click: (e) => { showModalInput(e); } } }, getSVG('settings'))
+                    cr.span({ class: 'pointer', on: { click: (e) => { showModalInput(e); } } }, getSVG('settings', 'icon-hover'))
                   )
                 )
               })
@@ -80,44 +80,6 @@ function getContent(fragmentId, callback) {
         )
       )
     ),
-    /*
-      cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          cr.a({ href: '#system' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('System'),
-                cr.p('Change systems settings that affect sound and display')
-              )
-            )
-          )
-        )
-      ),
-      cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          cr.a({ href: '#wifi' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('Wireless'),
-                cr.p('Connect this device to your Wifi')
-              )
-            )
-          )
-        )
-      ),
-      cr.div({ class: 'row' },
-        cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-          cr.a({ href: '#firmware' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('Firmware'),
-                cr.p('Manage this device\'s firmware')
-              )
-            )
-          )
-        )
-      )
-    ),*/
     system: cr.div(
       cr.div({ class: 'row'},
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
@@ -135,65 +97,41 @@ function getContent(fragmentId, callback) {
       cr.div({ id: 'settings-container' },
         cr.div({ class: 'row' },
           cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('Dim screen'),
-                cr.p('Screen too bright? Dim automatically after 10s')
+            cr.p('Change system settings that affect the display and audio'),
+            cr.h3('Dim screen'),
+            cr.p({ class: 'subtitle' }, 'Automatically dims the screen to a lower level after 10 seconds'),
+            cr.label({ class: 'switch' },
+              ((sysStatus.settings.dim) ?
+                cr.input({ type: 'checkbox', id: 'settings-dim', checked: 'checked', on: { change: (e) => { setDim(e) } } })
+              :
+                cr.input({ type: 'checkbox', id: 'settings-dim', on: { change: (e) => { setDim(e) } } })
               ),
-              cr.div({ class: 'col-xs nogrow' },
-                cr.label({ class: 'check-container check-menu' },
-                  cr.input({ type: 'checkbox', id: 'settings-dim', checked: 'checked', on: { change: (e) => { setDim(e) } } }),
-                  cr.span({ class: 'checkmark' })
-                )
-              )
-            )
-          )
-        ),
-        cr.div({ class: 'row' },
-          cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('Use Absolute Volume'),
-                cr.p('Use absolute volume instead of percentage')
+              cr.span({ class: 'slider round' })
+            ),
+            cr.h3('Absolute Volume'),
+            cr.p({ class: 'subtitle' }, 'Show the actual volume level (0-255) instead of a percentage'),
+            cr.label({ class: 'switch' },
+              ((sysStatus.settings.absoluteVol) ?
+                cr.input({ type: 'checkbox', id: 'settings-absolute-vol', checked: 'checked', on: { change: (e) => { setAbsoluteVolume(e) } } })
+              :
+                cr.input({ type: 'checkbox', id: 'settings-absolute-vol', on: { change: (e) => { setAbsoluteVolume(e) } } })
               ),
-              cr.div({ class: 'col-xs nogrow' },
-                cr.label({ class: 'check-container check-menu' },
-                  cr.input({ type: 'checkbox', id: 'settings-absolute-vol', checked: 'checked', on: { change: (e) => { setAbsoluteVolume(e) } } }),
-                  cr.span({ class: 'checkmark' })
-                )
-              )
+              cr.span({ class: 'slider round' })
+            ),
+            cr.h3('Maximum volume'),
+            cr.p({ class: 'subtitle' }, 'Set the maximum volume that can be set to protect your equipment and ears'),
+            cr.span({ class: 'addon' },
+              cr.button('<'),
+              cr.input({ type: 'number', value: sysStatus.volume.maxAllowedVol }),
+              cr.button('>'),
+            ),
+            cr.h3('Maximum startup volume'),
+            cr.p({ class: 'subtitle' }, 'Turn on with a reduced volume, useful if you listen to music loud when nobody\'s home'),
+            cr.span({ class: 'addon' },
+              cr.button('<'),
+              cr.input({ type: 'number', value: sysStatus.volume.maxStartVol }),
+              cr.button('>'),
             )
-          )
-        ),
-        cr.div({ class: 'row' },
-          cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-            cr.div({ class: 'row middle-xs' },
-              cr.div({ class: 'col-xs' },
-                cr.h2('Maximum volume'),
-                cr.p('Protect your equipment (and your ears) by limiting volume')
-              ),
-              cr.div({ class: 'col-xs nogrow' },
-                cr.span({ class: 'button-round'}, getSVG('chevron-right'))
-              )
-            )
-          )
-        ),
-        cr.div({ class: 'row' },
-          cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-              cr.div({ class: 'row middle-xs' },
-                cr.div({ class: 'col-xs' },
-                  cr.h2('Startup volume'),
-                  cr.p('Keep making yourself jump? Set a maximum startup volume')
-                ),
-                cr.div({ class: 'col-xs nogrow' },
-                  //cr.div({ class: 'addon' },
-                  //  cr.button(getSVG('minus')),
-                  //  cr.input({ type: 'text', id: 'max-start-volume' }),
-                  //  cr.button(getSVG('plus'))
-                  //)
-                  cr.span({ class: 'button-round'}, getSVG('chevron-right'))
-                )
-              )
           )
         )
       )
@@ -215,7 +153,7 @@ function getContent(fragmentId, callback) {
       cr.div({ id: 'settings-container' },
         cr.div({ class: 'row' },
           cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-            cr.p('Select a WiFi network'),
+            cr.p('Connect to a wireless network'),
             cr.div({ id: 'network-list' },
               cr.p('Scanning...', getSVG('rotate-cw', 'spinner')),
             )
@@ -242,59 +180,34 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
             cr.p('View and update firmware'),
             cr.h3('Current firmware'),
-            cr.p({ class: 'subtitle' }, sysStatus.firmware.fw)
-          )
-        ),
-        cr.div({ class: 'row' },
-          cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
-              cr.div({ class: 'row middle-xs' },
-                cr.div({ class: 'col-xs' },
-                  cr.h2('Firmware update'),
-                  cr.label({ for: 'update-file', class: 'pointer' },
-                    cr.span({ class: 'button-round'}, getSVG('upload')),
-                    cr.input({ type: 'file', id: 'update-file', class: 'hidden', on: { change: (e) => { uploadOTA(e) } } }),
-                  ),
-                  cr.div({ class: 'hidden', id: 'progress-container' },
-                    cr.div({ class: 'row' },
-                      cr.div({ class: 'col-xs nogrow'},
-                        cr.p('Updating'),
-                        cr.p({ id: 'update-type' }),
-                      ),
-                      cr.div({ class: 'col-xs'},
-                        cr.p('Uploading (', cr.span({ id: 'update-percentage' }), '%)'),
-                        cr.progress({ id: 'update-progress', max: 100, min: 0, value: 0 }),
-                      ),
-                      cr.div({ class: 'col-xs nogrow'},
-                        //image here
-                      )
-                    )
-                  ),
-                  cr.div({ class: 'hidden', id: 'success-container' },
-                    cr.div({ class: 'row' },
-                      cr.div({ class: 'col-xs nogrow'},
-                        getSVG('check-circle')
-                      ),
-                      cr.div({ class: 'col-xs'},
-                        cr.p('Firmware updated sucessfully'),
-                        cr.p({ class: 'block pointer', on: { click: () => { window.location.reload() } } }, 'Click here to reload the web UI')
-                      )
-                    )
-                  ),
-                  cr.div({ class: 'hidden', id: 'error-container' },
-                    cr.div({ class: 'row' },
-                      cr.div({ class: 'col-xs nogrow'},
-                        getSVG('frown')
-                      ),
-                      cr.div({ class: 'col-xs'},
-                        cr.p({ id: 'error-message'})
-                      )
-                    )
-                  )
-                )
+            cr.p({ class: 'subtitle' }, sysStatus.firmware.fw),
+            cr.label({ for: 'update-file', class: 'pointer' },
+              cr.span({ class: 'button'}, 'Update'),
+              cr.input({ type: 'file', id: 'update-file', class: 'hidden', on: { change: (e) => { uploadOTA(e) } } }),
+            ),
+            cr.div({ class: 'hidden', id: 'progress-container' },
+              cr.h3('Update progress'),
+              cr.p('Uploading (', cr.span({ id: 'update-percentage' }), '%)'),
+              cr.progress({ id: 'update-progress', max: 100, min: 0, value: 50 }),
+              cr.div({ class: 'message warning' },
+                cr.div({ class: 'heading' }, 'Do not power off'),
+                'Please wait while the update is installed. Do not power off or unplug the unit until it has completely restarted.'
               )
-            
+            ),
+            cr.div({ class: 'hidden', id: 'success-container' },
+              cr.div({ class: 'message success' },
+                cr.div({ class: 'heading' }, 'Firmware updated sucessfully'),
+                cr.span({ class: 'block pointer', on: { click: () => { window.location.reload() } } }, 'Click here to reload the web UI')
+              )
+            ),
+            cr.div({ class: 'hidden', id: 'error-container' },
+              cr.div({ class: 'message danger' },
+                cr.div({ class: 'heading' }, 'Update error'),
+                cr.span({ id: 'error-message'})
+              )
+            )
           )
-        )
+        )   
       )
     )
   }
