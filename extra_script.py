@@ -3,8 +3,10 @@ Import("env")
 import os
 
 def before_buildfs(source, target, env):
-    os.chdir('./data/www')
+    #link the binary so it's not included in the repo
+    os.system("ln .pio/build/esp32dev/firmware.bin data/firmware.bin")
 
+    os.chdir('./data/www')
     for file in os.listdir("."):
         if file.endswith(".css") or file.endswith("html") or file.endswith("js") or file.endswith("ico") or file.endswith("svg"):
             os.system('gzip -9 ' + file)
@@ -16,9 +18,10 @@ def before_buildfs(source, target, env):
 
 
 def after_buildfs(source, target, env):
-    print("after buildfs")
+    #remove link to firmware
+    os.system("rm data/firmware.bin")
+
     os.chdir('./data/www')
-    print(os.getcwd())
     for file in os.listdir("."):
         if file.endswith("gz"):
             os.system('gunzip ' + file)

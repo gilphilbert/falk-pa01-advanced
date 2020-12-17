@@ -344,10 +344,10 @@ void WiFiManager::loadServer() {
 
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
-      if (filename != "spiffs.bin" && filename != "firmware.bin") {
+      if (filename != "spiffs.bin" && filename != "spiffs.bin.gz" && filename != "firmware.bin") {
         return request->send(200, "text/plain", "Invalid firmware");
       }
-      int cmd = (filename == "spiffs.bin") ? U_SPIFFS : U_FLASH;
+      int cmd = (filename == "spiffs.bin" || filename == "spiffs.bin.gz") ? U_SPIFFS : U_FLASH;
       if(!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)){
         Update.printError(Serial);
         return request->send(200, "text/plain", "OTA could not begin");
@@ -380,8 +380,8 @@ void WiFiManager::loadServer() {
 
   server.addHandler(&events);
 
-  //server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
-  server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
+  server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
+  //server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
 }

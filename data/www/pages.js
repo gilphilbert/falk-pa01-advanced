@@ -25,14 +25,17 @@ function getContent(fragmentId, callback) {
       cr.div({ class: 'row' },
         cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
           cr.h2('Input'),
-          cr.div({ class: 'row center-content', id: 'input-container' },
+          cr.div({ class: 'row center-content nomargin', id: 'input-container' },
             sysStatus.inputs.map(e => {
               if (e.enabled == true) {
                 return cr.div({ class: 'col-xs-6 col-md-3' },
-                  cr.div({ class: 'pointer input-box' + ((e.selected) ? ' selected' : ''), 'data-id': e.id, on: { click: function() { inputChange(this) } } },
-                    getSVG(e.icon, 'inline-block'),
-                    cr.span(e.name),
-                    cr.input({ type: 'radio' })
+                  cr.label(
+                    cr.div({ class: 'pointer input-box', 'data-id': e.id, on: { click: function() { inputChange(this) } } },
+                      getSVG(e.icon, 'inline-block'),
+                      cr.span(e.name),
+                      //cr.input({ type: 'radio' })
+                      cr.div({ class: 'indicator' + ((e.selected) ? ' selected' : '') })
+                    )
                   )
                 )
               } else {

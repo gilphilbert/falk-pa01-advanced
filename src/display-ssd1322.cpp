@@ -109,7 +109,7 @@ void Display::firmwareUpdate() {
   u8g2.clearBuffer();					// clear the internal memory
 
   u8g2.setFont(u8g2_font_open_iconic_embedded_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
-  u8g2.drawGlyph(120,19,0x48);
+  u8g2.drawGlyph(120,24,0x48);
 
   u8g2.setFont(u8g2_font_crox1h_tr);
   String string = "Updating Firmware";
@@ -131,10 +131,10 @@ void Display::firmwareUpload() {
   u8g2.clearBuffer();					// clear the internal memory
 
   u8g2.setFont(u8g2_font_open_iconic_www_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
-  u8g2.drawGlyph(120,19,0x52);
+  u8g2.drawGlyph(120,24,0x52);
 
   u8g2.setFont(u8g2_font_crox1h_tr);
-  String string = "Uploading Firmware";
+  String string = "Downloading Firmware";
   const char* str = string.c_str();
   uint16_t x = 128 - (u8g2.getStrWidth(str) / 2);
   uint16_t y = 45;

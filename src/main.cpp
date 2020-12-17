@@ -127,7 +127,8 @@ void setup(){
     }
   }
 
-  if (sysSettings.maxStartVol > -1 && sysSettings.volume > sysSettings.maxStartVol) {
+  if(sysSettings.maxStartVol == -1) { sysSettings.maxStartVol = VOL_MAX; }
+  if (sysSettings.volume > sysSettings.maxStartVol) {
     sysSettings.volume = sysSettings.maxStartVol;
   }
 

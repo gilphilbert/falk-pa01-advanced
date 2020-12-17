@@ -1,4 +1,4 @@
-const debugmode = false;
+const debugmode = true;
 
 var sysStatus = {};
 
@@ -11,34 +11,46 @@ function loadContent () {
       v.remove()
     })
     contentDiv.appendChild(content)
-    const cr = crel.proxy
 
     // get any data relevant for this page
     switch (fragmentId) {
         case 'wireless':
-          window.fetch('/api/networks')
+          if (debugmode) {
+            data=[{ssid: 'Glibertvue', signal: -30, security: 'WEP'},{ssid: 'Snowbaby', signal: -80, security: 'OPEN'}]
+            buildWiFi(data)
+          } else {
+            window.fetch('/api/networks')
             .then(response => response.json())
             .then(data => {
-              var df = new DocumentFragment;
-              data.forEach(v => {
-                var w = getWiFiDetail(v.signal, v.security);
-                df.appendChild(
-                  crel.div({ class: 'row middle-xs padded' },
-                    cr.div({ class: 'col-xs col-xs-middle nogrow' },
-                      getSVG(w.icon, 'no-stroke')
-                    ),
-                    cr.div({ class: 'col-xs' },
-                      cr.h4(v.ssid),cr.p({class:'text-sm'}, w.text)
-                    )
-                  )
-                )
-              })
-              document.getElementById('network-list').firstChild.remove();
-              document.getElementById('network-list').appendChild(df);
+              buildWiFi(data)
             })
+          }
           break
     }
   })
+}
+
+function buildWiFi(data) {
+  const cr = crel.proxy
+  var df = new DocumentFragment;
+  data.forEach(v => {
+    var w = getWiFiDetail(v.signal, v.security);
+    df.appendChild(
+      cr.div({ class: 'row middle-xs padded pointer', 'data-network': JSON.stringify(v), on: { click: () => { console.log(v) }} },
+        cr.div({ class: 'col-xs col-xs-middle nogrow' },
+          getSVG(w.icon, 'no-stroke')
+        ),
+        cr.div({ class: 'col-xs' },
+          cr.h4(v.ssid),cr.p({class:'text-sm'}, w.text)
+        ),
+        cr.div({ class: 'col-xs col-xs-middle nogrow' },
+          cr.div(cr.span({ class: 'button button-sm button-hidden' }, 'Connect'))
+        )
+      )
+    )
+  })
+  document.getElementById('network-list').firstChild.remove();
+  document.getElementById('network-list').appendChild(df);
 }
 
 function showModalInput(e) {
@@ -140,24 +152,6 @@ function getSVG(name, cls) {
   return el
 }
 
-function getWifiIcon(rssi, secure) {
-  var icon = 'wifi-'
-  if (rssi >= -30) {
-    icon += '4'
-  } else if (rssi >= -67) {
-    icon += '3'
-  } else if (rssi >= -70) {
-    icon += '2'
-  } else if (rssi >= -80) {
-    icon += '1'
-  } else {
-    icon += '0'
-  }
-  if (secure != "OPEN") {
-    icon += '-secure'
-  }
-  return icon
-}
 function getWiFiDetail(rssi, secure) {
   var icon = 'wifi-'
   var str = 'Signal: '
@@ -180,7 +174,7 @@ function getWiFiDetail(rssi, secure) {
   if (secure != "OPEN") {
     icon += '-secure'
   } else {
-    str += ' (Open)'
+    str += ' (Insecure)'
   }
   return { icon: icon, text: str }
 }
@@ -247,7 +241,7 @@ function uploadOTA (event) {
   if (event !== null) {
     this.file = event.target.files[0]
   }
-  if (this.file.name != "spiffs.bin" && this.file.name != "firmware.bin") {
+  if (this.file.name != "spiffs.bin" && this.file.name != "spiffs.bin.gz" && this.file.name != "firmware.bin") {
     document.getElementById('error-message').innerHTML = "Invalid firmware file! Select either <strong>firmware.bin</strong> or <strong>application.bin</strong>"
     document.getElementById('error-container').classList.remove('hidden');
     return;
@@ -328,10 +322,10 @@ window.addEventListener('DOMContentLoaded', (event) => {
                 sysStatus.inputs[i].selected = false
               }
             }
-            var el =document.querySelectorAll("#input-container .input-box");
+            var el =document.querySelectorAll("#input-container .input-box .indicator");
             if (el != null) {
               el.forEach(e => {
-                if (sysStatus.inputs[e.dataset.id - 1].selected) {
+                if (sysStatus.inputs[e.parentNode.dataset.id - 1].selected) {
                   e.classList.add("selected")
                 } else {
                   e.classList.remove("selected")
