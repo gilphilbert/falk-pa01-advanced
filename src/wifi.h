@@ -13,6 +13,9 @@
 
 #define WIFI_TIMEOUT            300000 // timeout for 5 minutes
 
+#define FWIFI_IDLE              0
+#define FWIFI_COMMIT            1
+
 class WiFiManager {
   private:
     String translateEncryptionType(wifi_auth_mode_t encryptionType);
@@ -20,7 +23,7 @@ class WiFiManager {
     void loadServer();
   public:
     bool begin();
-    void loop();
+    short loop();
     void enableAP();
     void sendEvent(String event, String value);
     void sendEvent(String event, int value);

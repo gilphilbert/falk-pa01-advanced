@@ -16,7 +16,7 @@ class Display {
     void setAPMode(bool);
     void wifiConnected(bool);
 
-    void firmwareUpdate();
+    void firmwareUpdate(short progress);
     void firmwareUpload();
 };
 

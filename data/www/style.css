@@ -14,6 +14,7 @@
 :root {
   --royal-blue: #4D84C3;
   --light-blue: #6999cf;
+  --dark-blue: #1a4577;
   --body-bg: #f7f7f7;
   --lighter-gray: #efefef;
   --light-gray: #e1e1e1;
@@ -24,12 +25,13 @@
   --disabled: #bbbdbf;
 
   --green: #4dc396;
-  --green-light: #ddf1ea;
-  --yellow-light: #f0ebbc;
+  --green-lightest: #ddf1ea;
+  --yellow-lightest: #f0ebbc;
   --yellow: #e7d42b;
   --yellow-dark: #aa9c1a;
   --red: #C34D4D;
-  --red-light: #F9E0E0;
+  --red-light: #d66363;
+  --red-lightest: #F9E0E0;
 }
 
 body {         
@@ -42,6 +44,7 @@ body {
 html, button, input, select, textarea {
   font-family: 'Rubik', serif;
   font-weight: 300;
+  font-size: 16px;
 }
 h1,h2,h3,h4,h5,h6 {
   font-weight: 300;
@@ -56,7 +59,7 @@ figure {
 h3 {
   font-weight: normal;
   font-size: 16px;
-  margin-top: 32px;
+  margin-top: 10px;
 }
 h4 {
   font-weight: normal;
@@ -71,23 +74,6 @@ p.text-sm {
   margin-top: -4px;
   margin-bottom: 6px;
   font-size: 13px;
-}
-/*
-@media (min-width: 768px) {
-  figure {
-      margin: 0; //40px 0;
-  }
-}
-*/
-a.white-halo {
-  padding: 8px;
-  display: block;
-  border-radius: 1000px;
-  transition: 0.3s all;
-}
-a.white-halo:hover {
-  background-color: rgba(255,255,255,0.3);
-  transition: 0.3s all;
 }
 
 
@@ -118,31 +104,70 @@ a.white-halo:hover {
 
 .button {
   background-color: var(--royal-blue);
-  /*margin: 20px 0px;*/
-  padding: 10px 34px;
+  margin-right: 5px;
+  padding: 8px 32px;
   border-radius: 1000px;
   color: var(--white);
   display: inline-block;
-  transition: background-color 0.3s ease;
+  border: 2px solid var(--royal-blue);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  font-weight: 300!important;
+}
+.button:disabled,
+.button:disabled:hover {
+  background-color: var(--mid-gray)!important;
+  border-color: var(--mid-gray)!important;
+  cursor: inherit;
 }
 .button:hover {
   background-color: var(--light-blue)!important;
+  border-color: var(--light-blue)!important;
+  transition: all 0.3s ease;
   color: var(--white)!important;
-  transition: background-color 0.3s ease;
+}
+.button:focus {
+  border-color: var(--dark-blue);
 }
 .button.button-sm {
   padding: 6px 16px;
   font-size: 14px;
 }
-.button.button-hidden {
+.button.outline {
   background-color: transparent;
+  border-color: var(--mid-gray);
+  color: var(--dark-gray);
+}
+.button.outline:hover {
+  background-color: var(--light-gray)!important;
+  border-color: var(--mid-gray)!important;
+  color: var(--dark-gray)!important;
+}
+.button.outline:focus {
+  border-color: var(--dark-gray);
+}
+.button.button-hidden {
+  border-color: var(--body-bg);
+  background-color: var(--body-bg);
   color: var(--royal-blue);
 }
+.button.danger {
+  background-color: var(--red);
+  border-color: var(--red);
+}
+.button.danger:hover {
+  background-color: var(--red-light)!important;
+  border-color: var(--red-light)!important;
+}
+
 .row.pointer:hover .button.button-hidden {
   background-color: var(--light-blue)!important;
+  border-color: var(--light-blue)!important;
+  transition: all 0.3s ease;
   color: var(--white)!important;
-  transition: background-color 0.3s ease;
 }
+
 
 .indicator {
   height: 18px;
@@ -193,6 +218,9 @@ label:hover .indicator {
 }
 .row.padded {
   padding: 7px 0;
+}
+.row.pointer:hover {
+  font-weight: normal;
 }
 #app .row.nomargin {
   margin-left: -.5rem;
@@ -258,15 +286,6 @@ svg.icon-white {
     padding: 4px 27px 10px 5px;
   }
 }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-table td { padding: 18px 10px; border-bottom: 1px solid var(--light-gray); }
-table tr:last-child td { border: none; }
-table td.shrink { white-space: nowrap }
-table td.expand { width: 99%; }
 
 /* -------- UNIQUE -------- */
 img.logo {
@@ -359,21 +378,21 @@ img.logo {
 }
 
 .message.warning {
-  background-color: var(--yellow-light);
+  background-color: var(--yellow-lightest);
   color: var(--yellow-dark);
 }
 .message.warning .heading {
   background-color: var(--yellow);
 }
 .message.danger {
-  background-color: var(--red-light);
+  background-color: var(--red-lightest);
   color: var(--red);
 }
 .message.danger .heading {
   background-color: var(--red);
 }
 .message.success {
-  background-color: var(--green-light);
+  background-color: var(--green-lightest);
   color: var(--green);
 }
 .message.success .heading {
@@ -390,7 +409,32 @@ img.logo {
   display: block;
   margin: 15px 0;
 }
+.input-box:hover {
+  font-weight: normal;
+}
 
+#banner {
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--royal-blue);
+  color: var(--white);
+  position: absolute;
+  left: 0;
+  top: -100vh;
+  z-index: 100;
+  transition: top 500ms ease;
+  display: flex;
+  align-items: center;
+}
+#banner .content {
+  flex: 0 0 auto;
+  width: 100%;
+  text-align: center;
+}
+#banner.drop {
+  top: 0;
+  transition: top 500ms ease;
+}
 
 
 /* -------- MODAL CONTENT -------- */
@@ -453,12 +497,8 @@ img.logo {
 /* -------- FORM CONTENT -------- */
 fieldset {
   border: none;
-  padding: 12px 0px;
-  margin: 0;
-}
-fieldset p {
   padding: 0;
-  margin: 0 0 5px 0;
+  margin: 20px 0 20px 0;
 }
 .addon {
   display: flex;
@@ -479,6 +519,12 @@ fieldset p {
   padding: 3px 10px;
   border: 2px solid var(--mid-gray);
   font-weight: normal;
+  outline: none;
+  transition: all 0.3s ease;
+}
+.addon button:focus {
+  border-color: var(--dark-gray);
+  transition: all 0.3s ease;
 }
 .addon button svg {
   height: 18px;
@@ -494,14 +540,33 @@ fieldset p {
   border-bottom-right-radius: 1000px;
   border-left: none;
 }
-input[type="text"] {
-  background: #6a6e73;
-  color: var(--white);
-  border: none;
+input[type="number"],
+input[type="text"],
+input[type="password"] {
+  border: 2px solid var(--mid-gray);
+  background: var(--white);
+  color: var(--dark-gray);
   outline: none;
-  padding: 5px 5px;
-  border-radius: 4px;
-  font-size: inherit;
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 1000px;
+  transition: all 0.3s ease;
+}
+
+input[type="number"] {
+  background: var(--body-bg);
+  -moz-appearance: textfield;
+  padding: 8px 0;
+  width: 38px;
+  text-align: center;
+  font-weight: normal;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--dark-gray);
+  transition: all 0.3s ease;
 }
 
 input::-webkit-outer-spin-button,
@@ -509,17 +574,14 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type=number] {
-  border: 2px solid var(--mid-gray);
-  border-radius: 1000px;
-  background-color: transparent;
-  -moz-appearance: textfield;
-  font-size: 16px;
-  padding: 8px 0;
-  color: var(--dark-gray);
-  width: 38px;
-  text-align: center;
-  font-weight: normal;
+
+.helper {
+  margin-top: 5px;
+  font-size: 14px;
+  display: block;
+}
+.helper.danger {
+  color: var(--red);
 }
 
 /* The switch - the box around the slider */

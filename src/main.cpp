@@ -35,6 +35,11 @@ int muteDebounceTime = 0;
 int wifiButtonPressTime = 0;
 uint8_t wifibuttonstate = HIGH;
 
+void displayUpdateProgress(int progress, int total) {
+  short perc = round(((float)progress / (float)total) * 100);
+  display.firmwareUpdate(perc);
+}
+
 void spiffsUpdate() {
   const char* fwfile = "/firmware.bin";
 
@@ -65,7 +70,9 @@ void spiffsUpdate() {
     return;
   }
 
-  display.firmwareUpdate();
+  Update.onProgress(displayUpdateProgress);
+
+  display.firmwareUpdate(0);
 
   // update the firmware
   Update.writeStream(file);
@@ -91,6 +98,7 @@ void spiffsUpdate() {
 
 void setup(){	
 	Serial.begin(9600);
+  Serial.setDebugOutput(true);
   Serial.println("Booting...");
 
   //setup the power control elements
@@ -209,7 +217,11 @@ void wifiLoop(int m) {
     wifi.enableAP();
     wifiButtonPressTime = 0;
   }
-  wifi.loop();
+  short state = wifi.loop();
+  if (state == FWIFI_COMMIT) {
+    //we've recieved new wifi credentials, so let's save them
+    FlashCommit = m;
+  }
 }
 
 

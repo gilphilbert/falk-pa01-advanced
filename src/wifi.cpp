@@ -7,24 +7,63 @@ AsyncEventSource events("/events");
 bool shouldReboot = false;
 int wifiConnectTimeout = 0;
 
+const char * temp_ssid;
+const char * temp_key;
+int tryConnect = 0;
+short tryConnectTimeout = 12000;
+short curMode = -1;
+
 const char* ssid = "FALK-PA01";
 
-void WiFiManager::loop() {
+short WiFiManager::loop() {
+  short state = FWIFI_IDLE;
   
-    if (shouldReboot) {
-        yield();
-        delay(1000);
-        yield();
-        esp_task_wdt_init(1,true);
-        esp_task_wdt_add(NULL);
-        while(true);
+  if (shouldReboot) {
+      yield();
+      delay(1000);
+      yield();
+      esp_task_wdt_init(1,true);
+      esp_task_wdt_add(NULL);
+      while(true);
+  }
+  if (wifiConnectTimeout > 0 && millis() > wifiConnectTimeout) {
+    wifiConnectTimeout = 0;
+    WiFi.mode(WIFI_MODE_STA);
+    display.setAPMode(false);
+  }
+
+  if (tryConnect > 0) {
+    int status = WiFi.status();
+    //if (status != curMode) {
+    //  curMode = status;
+    //  Serial.println(curMode);
+    //}
+    if (status == WL_CONNECTED) {
+      sendEvent("wireless","success");
+      sendEvent("ssid",temp_ssid);
+      sysSettings.wifi.ssid = temp_ssid;
+      sysSettings.wifi.pass = temp_key;
+      tryConnect = 0;
+      state = FWIFI_COMMIT;
+    } else if (millis() > tryConnect + tryConnectTimeout) {
+      //disconnect the STA so AP can stabilize again
+      WiFi.disconnect();
+      temp_ssid = "";
+      temp_ssid = "";
+      sendEvent("wireless","failed");
+      tryConnect = 0;
     }
-    if (wifiConnectTimeout > 0 && millis() > wifiConnectTimeout) {
-      wifiConnectTimeout = 0;
-      WiFi.mode(WIFI_MODE_STA);
-      display.setAPMode(false);
-      //display.updateScreen();
-    }
+    // 0 = WL_IDLE_STATUS
+    // 1 = WL_NO_SSID_AVAIL
+    // 2 = WL_SCAN_COMPLETED
+    // 3 = WL_CONNECTED
+    // 4 = WL_CONNECT_FAILED
+    // 5 = WL_CONNECTION_LOST
+    // 6 = WL_DISCONNECTED
+    // 255 = WL_NO_SHIELD
+    //}
+  }
+  return state;
 }
 
 bool WiFiManager::begin() {
@@ -60,8 +99,9 @@ bool WiFiManager::begin() {
 
 void WiFiManager::enableAP() {
   WiFi.mode(WIFI_AP_STA);
-  WiFi.enableSTA(false);
-  WiFi.mode(WIFI_AP);
+  WiFi.disconnect();
+  //WiFi.enableSTA(false);
+  //WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid);
   IPAddress IP = WiFi.softAPIP();
   MDNS.begin(HOSTNAME);
@@ -330,6 +370,31 @@ void WiFiManager::loadServer() {
 
     String networks = WiFiManager::getNetworks();
     return request->send(200, "application/json", networks);
+  });
+
+  server.on("/api/setWireless", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+    temp_ssid = doc["ssid"];
+    temp_key = doc["key"];
+
+    //events.close();
+    //server.end();
+    Serial.println(temp_ssid);
+    Serial.println(temp_key);
+
+    WiFi.begin(temp_ssid, temp_key);
+    tryConnect = millis();
+
+    //no response from this function
+    String retStr = "{}";
+    return request->send(200, "application/json", retStr);
   });
   
   server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request){

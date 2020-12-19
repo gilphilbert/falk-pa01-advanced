@@ -105,22 +105,26 @@ void Display::wifiScreen(const char* ssid) {
   u8g2.sendBuffer();
 }
 
-void Display::firmwareUpdate() {
+void Display::firmwareUpdate(short perc) {
   u8g2.clearBuffer();					// clear the internal memory
 
-  u8g2.setFont(u8g2_font_open_iconic_embedded_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
-  u8g2.drawGlyph(120,24,0x48);
-
-  u8g2.setFont(u8g2_font_crox1h_tr);
-  String string = "Updating Firmware";
+  u8g2.setFont(u8g2_font_crox2h_tr);
+  String string = "Updating firmware";
   const char* str = string.c_str();
   uint16_t x = 128 - (u8g2.getStrWidth(str) / 2);
-  uint16_t y = 45;
+  uint16_t y = 14;
   u8g2.drawStr(x, y, str);
 
+  u8g2.drawFrame(80, 28, 96, 12);
+  if (perc > 0) {
+    short w = round(((float)perc / (float)100) * 96);
+    u8g2.drawBox(80, 28, w, 12);
+  }
+
+  u8g2.setFont(u8g2_font_crox1h_tr);
   string = "Do not power off";
   x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
-  y = SCREEN_HEIGHT;
+  y = SCREEN_HEIGHT - 5;
   u8g2.drawStr(x, y, string.c_str());
 
   u8g2.setContrast(255);
