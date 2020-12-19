@@ -1,4 +1,4 @@
-const debugmode = false;
+const debugmode = true;
 
 var sysStatus = {};
 
