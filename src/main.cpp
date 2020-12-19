@@ -36,8 +36,7 @@ int wifiButtonPressTime = 0;
 uint8_t wifibuttonstate = HIGH;
 
 void displayUpdateProgress(int progress, int total) {
-  short perc = round(((float)progress / (float)total) * 100);
-  display.firmwareUpdate(perc);
+  display.firmwareUpdate(progress, total);
 }
 
 void spiffsUpdate() {
@@ -72,7 +71,7 @@ void spiffsUpdate() {
 
   Update.onProgress(displayUpdateProgress);
 
-  display.firmwareUpdate(0);
+  display.firmwareUpdate(0, 0);
 
   // update the firmware
   Update.writeStream(file);

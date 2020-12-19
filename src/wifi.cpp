@@ -15,6 +15,10 @@ short curMode = -1;
 
 const char* ssid = "FALK-PA01";
 
+void uploadProgress(int val, int total) {
+  display.firmwareUpload(val, total);
+}
+
 short WiFiManager::loop() {
   short state = FWIFI_IDLE;
   
@@ -67,6 +71,9 @@ short WiFiManager::loop() {
 }
 
 bool WiFiManager::begin() {
+  //static hostname for now, we'll make this editable later
+  WiFi.setHostname('falk-pa01');
+
   if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
     return false;
   }
@@ -406,6 +413,9 @@ void WiFiManager::loadServer() {
     request->send(response);
   },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     extendTimeout();
+    display.firmwareUpload(0, 0);
+
+    Update.onProgress(uploadProgress);
 
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
@@ -418,7 +428,6 @@ void WiFiManager::loadServer() {
         return request->send(200, "text/plain", "OTA could not begin");
       }
     }
-    display.firmwareUpload();
     //switch off power to peripherals
     inpEnc.pauseCount();
     volEnc.pauseCount();

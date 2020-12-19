@@ -105,49 +105,46 @@ void Display::wifiScreen(const char* ssid) {
   u8g2.sendBuffer();
 }
 
-void Display::firmwareUpdate(short perc) {
-  u8g2.clearBuffer();					// clear the internal memory
+void Display::firmwareUpdate(int val, int total) {
+  u8g2.clearBuffer();
 
   u8g2.setFont(u8g2_font_crox2h_tr);
   String string = "Updating firmware";
-  const char* str = string.c_str();
-  uint16_t x = 128 - (u8g2.getStrWidth(str) / 2);
-  uint16_t y = 14;
-  u8g2.drawStr(x, y, str);
+  uint16_t x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
+  u8g2.drawStr(x, 14, string.c_str());
 
   u8g2.drawFrame(80, 28, 96, 12);
-  if (perc > 0) {
-    short w = round(((float)perc / (float)100) * 96);
+  if (val > 0) {
+    short w = round(((float)val / (float)total) * 96);
     u8g2.drawBox(80, 28, w, 12);
   }
 
   u8g2.setFont(u8g2_font_crox1h_tr);
   string = "Do not power off";
   x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
-  y = SCREEN_HEIGHT - 5;
-  u8g2.drawStr(x, y, string.c_str());
+  u8g2.drawStr(x, SCREEN_HEIGHT - 5, string.c_str());
 
   u8g2.setContrast(255);
   u8g2.sendBuffer();
 }
 
-void Display::firmwareUpload() {
+void Display::firmwareUpload(int val, int total) {
   u8g2.clearBuffer();					// clear the internal memory
-
-  u8g2.setFont(u8g2_font_open_iconic_www_2x_t);    //<!--------------------------------- NEEDS A PROPER ICON!
-  u8g2.drawGlyph(120,24,0x52);
 
   u8g2.setFont(u8g2_font_crox1h_tr);
   String string = "Downloading Firmware";
-  const char* str = string.c_str();
-  uint16_t x = 128 - (u8g2.getStrWidth(str) / 2);
-  uint16_t y = 45;
-  u8g2.drawStr(x, y, str);
+  uint16_t x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
+  u8g2.drawStr(x, 14, string.c_str());
+
+  u8g2.drawFrame(80, 28, 96, 12);
+  if (val > 0) {
+    short w = round(((float)val / (float)total) * 96);
+    u8g2.drawBox(80, 28, w, 12);
+  }
 
   string = "Do not power off";
   x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
-  y = SCREEN_HEIGHT;
-  u8g2.drawStr(x, y, string.c_str());
+  u8g2.drawStr(x, SCREEN_HEIGHT, string.c_str());
 
   u8g2.setContrast(255);
   u8g2.sendBuffer();
