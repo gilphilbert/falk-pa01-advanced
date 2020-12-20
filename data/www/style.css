@@ -361,6 +361,18 @@ img.logo {
   background-color: var(--royal-blue);
 }
 
+.white-halo {
+  display: block;
+  border-radius: 1000px;
+  padding: 8px;
+  transition: background-color 0.3s ease;
+}
+.white-halo:hover {
+  background-color: var(--light-blue);
+  transition: background-color 0.3s ease;
+}
+
+
 .message {
   background-color: var(--light-gray);
   border-radius: 6px;
