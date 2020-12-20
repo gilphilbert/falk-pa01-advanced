@@ -85,11 +85,11 @@ void spiffsUpdate() {
   file.close();
 
   // remove the firmware we've updated
-  delay(500);
+  delay(200);
   SPIFFS.remove(fwfile);
 
   // delay seems to help with file removal
-  delay(2000);
+  delay(200);
 
   // restart the MCU
   ESP.restart();
