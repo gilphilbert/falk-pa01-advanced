@@ -72,7 +72,7 @@ short WiFiManager::loop() {
 
 bool WiFiManager::begin() {
   //static hostname for now, we'll make this editable later
-  WiFi.setHostname('falk-pa01');
+  WiFi.setHostname("falk-pa01");
 
   if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
     return false;
