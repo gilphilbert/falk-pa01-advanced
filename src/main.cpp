@@ -123,7 +123,7 @@ void setup(){
 
   //start preferences
   preferences.begin("falk-pre", false);
-  //preferences.clear();
+  preferences.clear();
   preferences.getBytes("settings", &sysSettings, sizeof(DeviceSettings));
 
   //add some default values if this is our first boot

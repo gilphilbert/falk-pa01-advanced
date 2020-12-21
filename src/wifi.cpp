@@ -14,6 +14,7 @@ short tryConnectTimeout = 12000;
 short curMode = -1;
 
 const char* ssid = "FALK-PA01";
+const char* hostname = "falk-pa01";
 
 void uploadProgress(int val, int total) {
   display.firmwareUpload(val, total);
@@ -43,8 +44,17 @@ short WiFiManager::loop() {
     //  Serial.println(curMode);
     //}
     if (status == WL_CONNECTED) {
-      sendEvent("wireless","success");
-      sendEvent("ssid",temp_ssid);
+      StaticJsonDocument<800> doc;
+      JsonObject retObj = doc.to<JsonObject>();
+      retObj["success"] = true;
+      retObj["ssid"] = temp_ssid;
+      retObj["ipaddr"] = (String)WiFi.localIP();
+      //sendEvent("wireless","success");
+      //sendEvent("ssid",temp_ssid);
+      //sendEvent("ipaddress", WiFi.localIP);
+      String retStr;
+      serializeJson(retObj, retStr);
+      sendEvent("wireless", retStr);
       sysSettings.wifi.ssid = temp_ssid;
       sysSettings.wifi.pass = temp_key;
       tryConnect = 0;
@@ -54,7 +64,7 @@ short WiFiManager::loop() {
       WiFi.disconnect();
       temp_ssid = "";
       temp_ssid = "";
-      sendEvent("wireless","failed");
+      sendEvent("wireless","{\"success\":false}");
       tryConnect = 0;
     }
     // 0 = WL_IDLE_STATUS
@@ -71,8 +81,7 @@ short WiFiManager::loop() {
 }
 
 bool WiFiManager::begin() {
-  //static hostname for now, we'll make this editable later
-  WiFi.setHostname("falk-pa01");
+  WiFi.setHostname(sysSettings.wifi.hostname.c_str());
 
   if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
     return false;
@@ -183,6 +192,8 @@ void WiFiManager::loadServer() {
     // create a JSON object for the response
     StaticJsonDocument<800> doc;
     JsonObject retObj = doc.to<JsonObject>();
+
+    retObj["ipaddr"] = "";
 
     //generate the volume object
     JsonObject volObj = retObj.createNestedObject("volume");

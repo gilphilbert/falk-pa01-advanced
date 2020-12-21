@@ -1,6 +1,6 @@
-const debugmode = false;
+const debugmode = false
 
-var sysStatus = {};
+var sysStatus = {}
 
 const cr = crel.proxy
 
@@ -35,9 +35,9 @@ function loadContent () {
 /* DOM helpers */
 
 function buildWiFi(data) {
-  var df = new DocumentFragment;
+  var df = new DocumentFragment
   data.forEach(v => {
-    var w = getWiFiDetail(v.signal, v.security);
+    var w = getWiFiDetail(v.signal, v.security)
     df.appendChild(
       cr.div({ class: 'row middle-xs padded pointer', 'data-network': JSON.stringify(v), on: { click: () => { keyWiFi(v) }} },
         cr.div({ class: 'col-xs col-xs-middle nogrow' },
@@ -52,8 +52,8 @@ function buildWiFi(data) {
       )
     )
   })
-  document.getElementById('network-list').firstChild.remove();
-  document.getElementById('network-list').appendChild(df);
+  document.getElementById('network-list').firstChild.remove()
+  document.getElementById('network-list').appendChild(df)
 }
 
 function keyWiFi(data) {
@@ -164,7 +164,7 @@ function setDim(e) {
       console.log(data)
     })
     .catch(() => {
-      e.target.checked = !e.target.checked;
+      e.target.checked = !e.target.checked
     })
 }
 
@@ -178,7 +178,7 @@ function setAbsoluteVolume(e) {
       console.log(data)
     })
     .catch(() => {
-      e.target.checked = !e.target.checked;
+      e.target.checked = !e.target.checked
     })
 }
 
@@ -206,10 +206,10 @@ function setMaxStartupVolume(v) {
 }
 
 function connectWiFi(btn, ssid) {
-  var key = document.getElementById('wifi-key').value;
-  btn.disabled = true;
+  var key = document.getElementById('wifi-key').value
+  btn.disabled = true
   btn.innerText = "Connecting..."
-  document.getElementById('connect-helper').innerText = '';
+  document.getElementById('connect-helper').innerText = ''
   body = JSON.stringify({
     ssid: ssid,
     key: key
@@ -229,7 +229,7 @@ function factoryReset() {
 var uploading = false
 function uploadOTA (event) {
   if (uploading == true) {
-    return;
+    return
   }
   document.getElementById('update-file').setAttribute('disabled', true)
   this.uploading = true
@@ -239,10 +239,10 @@ function uploadOTA (event) {
   }
   if (this.file.name != "spiffs.bin" && this.file.name != "spiffs.bin.gz" && this.file.name != "firmware.bin") {
     document.getElementById('error-message').innerHTML = "Invalid firmware file! Select either <strong>firmware.bin</strong> or <strong>application.bin</strong>"
-    document.getElementById('error-container').classList.remove('hidden');
-    return;
+    document.getElementById('error-container').classList.remove('hidden')
+    return
   }
-  document.getElementById('error-container').classList.add('hidden');
+  document.getElementById('error-container').classList.add('hidden')
   formData.append(this.type, this.file, this.type)
   const request = new XMLHttpRequest()
   request.addEventListener('load', () => {
@@ -251,13 +251,13 @@ function uploadOTA (event) {
     // request.response will hold the response from the server
     if (request.status === 200) {
       document.getElementById('progress-container').classList.add('hidden')
-      document.getElementById('success-container').classList.remove('hidden');
+      document.getElementById('success-container').classList.remove('hidden')
     } else if (request.status !== 500) {
       document.getElementById('error-message').innerText = `[HTTP ERROR] ${request.statusText}`
-      document.getElementById('error-container').classList.remove('hidden');
+      document.getElementById('error-container').classList.remove('hidden')
     } else {
       document.getElementById('error-message').innerText = request.responseText
-      document.getElementById('error-container').classList.remove('hidden');
+      document.getElementById('error-container').classList.remove('hidden')
     }
     uploading = false
     document.getElementById('update-file').setAttribute('disabled', false)
@@ -281,40 +281,40 @@ window.addEventListener('DOMContentLoaded', (event) => {
   }
 
   if (debugmode) {
-    sysStatus = {"volume":{"current":68,"max":255,"maxAllowedVol":255,"maxStartVol":255},"inputs":[{"id":1,"name":"CD","icon":"disc","selected":true,"enabled":1},{"id":2,"name":"Input 2","icon":"disc","selected":false,"enabled":1},{"id":3,"name":"Input 3","icon":"disc","selected":false,"enabled":1},{"id":4,"name":"Input 4","icon":"disc","selected":false,"enabled":1}],"settings":{"dim":0,"absoluteVol":1,"wifi_ssid":""},"firmware":{"fw":"0.1.10"}}
+    sysStatus = {"volume":{"current":68,"max":255,"maxAllowedVol":255,"maxStartVol":255},"inputs":[{"id":1,"name":"CD","icon":"disc","selected":true,"enabled":1},{"id":2,"name":"Input 2","icon":"disc","selected":false,"enabled":1},{"id":3,"name":"Input 3","icon":"disc","selected":false,"enabled":1},{"id":4,"name":"Input 4","icon":"disc","selected":false,"enabled":1}],"settings":{"dim":0,"absoluteVol":1,"wifi_ssid":""},"firmware":{"fw":"0.1.10"},"ipaddr":""}
     loadContent()
     window.addEventListener('hashchange', loadContent)
   } else {
 
     if (!!window.EventSource) {
-      var source = new EventSource('/events');
+      var source = new EventSource('/events')
     
       source.addEventListener('open', function(e) {
-        console.log("Subscribed to events");
+        console.log("Subscribed to events")
         if (debugmode == false)
-          document.getElementById('banner').classList.remove('drop');
-      }, false);
+          document.getElementById('banner').classList.remove('drop')
+      }, false)
     
       source.addEventListener('error', function(e) {
         if (e.target.readyState != EventSource.OPEN) {
-          console.log("Disconnected from event server");
+          console.log("Disconnected from event server")
           if (debugmode == false)
-            document.getElementById('banner').classList.add('drop');
+            document.getElementById('banner').classList.add('drop')
         }
-      }, false);
+      }, false)
     
       source.addEventListener('message', function(e) {
-        var obj = JSON.parse(e.data);
-        var key = Object.keys(obj)[0];
+        var obj = JSON.parse(e.data)
+        var key = Object.keys(obj)[0]
         switch(key) {
 
           case 'volume':
-            sysStatus.volume.current = obj[key];
-            var el =document.querySelector("#volume");
+            sysStatus.volume.current = obj[key]
+            var el =document.querySelector("#volume")
             if (el != null) {
               el.value = obj[key]
             }
-            break;
+            break
 
           case 'input':
             for(var i = 0; i < sysStatus.inputs.length; i++) {
@@ -324,7 +324,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                 sysStatus.inputs[i].selected = false
               }
             }
-            var el =document.querySelectorAll("#input-container .input-box .indicator");
+            var el =document.querySelectorAll("#input-container .input-box .indicator")
             if (el != null) {
               el.forEach(e => {
                 if (sysStatus.inputs[e.parentNode.dataset.id - 1].selected) {
@@ -334,10 +334,11 @@ window.addEventListener('DOMContentLoaded', (event) => {
                 }
               })
             }
-            break;
+            break
 
           case 'wireless':
-            if (obj[key]=='failed') {
+            var data = JSON.parse(obj[key])
+            if (data.status==false) {
               var el = document.getElementById('connect-button')
               el.disabled = false
               el.innerText = 'Connect'
@@ -347,15 +348,21 @@ window.addEventListener('DOMContentLoaded', (event) => {
               //connection successful, show that page here...
               var el =document.getElementById('settings-container')
               el.firstChild.remove()
-              el.appendChild(cr.h3('Connection successful'), cr.p({ class: 'subtitle' }, 'This device is now connected to your wifi'))
+              el.appendChild(
+                cr.h3('Connection successful'),
+                cr.p({ class: 'subtitle' }, 'This device is now connected to your wifi'),
+                cr.p(cr.a({ href: 'http://' + data.ipaddr }, 'Click here to be redirected to the new address on your network'))
+              )
               //should probably show the wifi/how to find this device (mDNS, etc.)
+              sysStatus.settings.wifi_ssid = data.ssid
+              sysStatus.ip_address = data.ipaddr
             }
-            break;
+            break
 
           default:
-            console.log("message", e.data);
+            console.log("message", e.data)
         }
-      }, false);
+      }, false)
     }
     
     window.fetch('/api/status')
@@ -377,7 +384,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 function showModalInput(e) {
   data = e.target.closest('.row').dataset
-  var df = new DocumentFragment();
+  var df = new DocumentFragment()
   df.appendChild(
     cr.div({ class: 'modal-body' },
       cr.h2('Edit input'),
@@ -417,7 +424,7 @@ function showModalInput(e) {
   }
   df.appendChild(
     cr.div({ class: 'modal-footer two' },
-        cr.button({ class: 'cancel', on: { click: (e) => { hideModal(); } } }, 'Cancel'),
+        cr.button({ class: 'cancel', on: { click: (e) => { hideModal() } } }, 'Cancel'),
         cr.button({ class: 'save', on: { click: () => { 
           body = JSON.stringify({
             input: parseInt(data.id),
@@ -429,8 +436,8 @@ function showModalInput(e) {
             .then(response => response.json())
             .then(data => {
               if (data.status == "ok") {
-                loadContent();
-                hideModal();
+                loadContent()
+                hideModal()
               }
             })
         } } }, 'Save')
@@ -442,7 +449,7 @@ function showModalInput(e) {
 function showModal(content) {
   var mc = document.querySelector('#modal .modal-content')
   while(mc.hasChildNodes()) {
-    mc.removeChild(mc.firstChild);
+    mc.removeChild(mc.firstChild)
   }
   mc.appendChild(content)
   document.getElementById('modal').classList.remove('hidden')

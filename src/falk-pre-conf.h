@@ -17,10 +17,6 @@
 
 #define SCREEN_TIMEOUT          10000
 
-// ====== WIFI DEFAULTS ====== //
-
-#define HOSTNAME                "falk-pa01"
-
 // ====== BUTTON SETTINGS ====== //
 
 #define BUTTON_DEBOUNCE_DELAY   50
@@ -59,6 +55,7 @@ typedef struct {
 typedef struct {
   String ssid = "";
   String pass = "";
+  String hostname = "falk-pa01";
 } DeviceWifi;
 
 typedef struct {
