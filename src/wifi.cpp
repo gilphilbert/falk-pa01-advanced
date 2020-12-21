@@ -11,15 +11,15 @@ const char * temp_ssid;
 const char * temp_key;
 int tryConnect = 0;
 short tryConnectTimeout = 12000;
-short curMode = -1;
 
-const char* ssid = "FALK-PA01";
-const char* hostname = "falk-pa01";
+const char* ap_ssid = "FALK-PA01";
 
+/* wrapper to pass Update.onProgress to the display */
 void uploadProgress(int val, int total) {
   display.firmwareUpload(val, total);
 }
 
+/* loop detects reboot needs, implements the AP timeout and detects whether we're connected during setup */
 short WiFiManager::loop() {
   short state = FWIFI_IDLE;
   
@@ -39,19 +39,12 @@ short WiFiManager::loop() {
 
   if (tryConnect > 0) {
     int status = WiFi.status();
-    //if (status != curMode) {
-    //  curMode = status;
-    //  Serial.println(curMode);
-    //}
     if (status == WL_CONNECTED) {
       StaticJsonDocument<800> doc;
       JsonObject retObj = doc.to<JsonObject>();
       retObj["success"] = true;
       retObj["ssid"] = temp_ssid;
       retObj["ipaddr"] = (String)WiFi.localIP();
-      //sendEvent("wireless","success");
-      //sendEvent("ssid",temp_ssid);
-      //sendEvent("ipaddress", WiFi.localIP);
       String retStr;
       serializeJson(retObj, retStr);
       sendEvent("wireless", retStr);
@@ -67,15 +60,16 @@ short WiFiManager::loop() {
       sendEvent("wireless","{\"success\":false}");
       tryConnect = 0;
     }
-    // 0 = WL_IDLE_STATUS
-    // 1 = WL_NO_SSID_AVAIL
-    // 2 = WL_SCAN_COMPLETED
-    // 3 = WL_CONNECTED
-    // 4 = WL_CONNECT_FAILED
-    // 5 = WL_CONNECTION_LOST
-    // 6 = WL_DISCONNECTED
-    // 255 = WL_NO_SHIELD
-    //}
+    /* codes for WiFi.status()
+       0 = WL_IDLE_STATUS
+       1 = WL_NO_SSID_AVAIL
+       2 = WL_SCAN_COMPLETED
+       3 = WL_CONNECTED
+       4 = WL_CONNECT_FAILED
+       5 = WL_CONNECTION_LOST
+       6 = WL_DISCONNECTED
+       255 = WL_NO_SHIELD
+    */
   }
   return state;
 }
@@ -101,7 +95,7 @@ bool WiFiManager::begin() {
     }
   }
   Serial.println();
-  MDNS.begin(HOSTNAME);
+  MDNS.begin(sysSettings.wifi.hostname.c_str());
 
   if (kill == true) {
     Serial.println("Couldn't connect to Wifi");
@@ -116,17 +110,15 @@ bool WiFiManager::begin() {
 void WiFiManager::enableAP() {
   WiFi.mode(WIFI_AP_STA);
   WiFi.disconnect();
-  //WiFi.enableSTA(false);
-  //WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid);
+  WiFi.softAP(ap_ssid);
   IPAddress IP = WiFi.softAPIP();
-  MDNS.begin(HOSTNAME);
+  MDNS.begin(sysSettings.wifi.hostname.c_str());
 
   Serial.print("AP IP address: ");
   Serial.println(IP);
 
   display.setAPMode(true);
-  display.wifiScreen(ssid);
+  display.wifiScreen(ap_ssid);
 
   WiFiManager::loadServer();
 
@@ -383,6 +375,77 @@ void WiFiManager::loadServer() {
     return request->send(200, "application/json", retStr);
   });
 
+  server.on("/api/settings/maxVol", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+    bool success = false;
+    String message = "";
+
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    if (doc.containsKey("value")) {
+      int v = doc["value"];
+      if (v > 0 && v <= VOL_MAX) {
+        sysSettings.maxVol = v;
+        success = true;
+        if (sysSettings.volume > v) {
+          sysSettings.volume = v;
+          volEnc.count = v;
+          display.updateScreen();
+        }
+      } else {
+        message = "invalid: value";
+      }
+    } else {
+      message = "missing: value";
+    }
+    doc.clear();
+    doc["state"] = success;
+    doc["message"] = message;
+
+    //generate the string
+    String retStr;
+    serializeJson(doc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/settings/maxStartupVol", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+    bool success = false;
+    String message = "";
+
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+
+    if (doc.containsKey("value")) {
+      int v = doc["value"];
+      if (v > 0 && v <= VOL_MAX) {
+        sysSettings.maxStartVol = v;
+        success = true;
+      } else {
+        message = "invalid: value";
+      }
+    } else {
+      message = "missing: value";
+    }
+    doc.clear();
+    doc["state"] = success;
+    doc["message"] = message;
+
+    //generate the string
+    String retStr;
+    serializeJson(doc, retStr);
+    return request->send(200, "application/json", retStr);
+  });
+
   server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
     extendTimeout();
 
@@ -402,13 +465,32 @@ void WiFiManager::loadServer() {
     temp_ssid = doc["ssid"];
     temp_key = doc["key"];
 
-    //events.close();
-    //server.end();
     Serial.println(temp_ssid);
     Serial.println(temp_key);
 
     WiFi.begin(temp_ssid, temp_key);
     tryConnect = millis();
+
+    //no response from this function
+    String retStr = "{}";
+    return request->send(200, "application/json", retStr);
+  });
+
+  server.on("/api/factoryReset", HTTP_POST, [](AsyncWebServerRequest *request){
+    extendTimeout();
+
+    // handle the instance where no data is provided
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    extendTimeout();
+
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, (const char*) data);
+    const char * check = doc["check"];
+
+    if (check == "true") {
+      //clear the preferences, probably need to send a message back to main via the loop
+      //todo
+    }
 
     //no response from this function
     String retStr = "{}";

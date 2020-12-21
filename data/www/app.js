@@ -1,4 +1,4 @@
-const debugmode = false
+const debugmode = ((window.location.hostname == '127.0.0.1') ? true : false)
 
 var sysStatus = {}
 
@@ -189,7 +189,7 @@ function setMaxVolume(v) {
     .then(data => {
       console.log(data)
     })
-    .catch(() => {
+    .catch((e) => {
       console.log(e)
     })
 }

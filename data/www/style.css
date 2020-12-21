@@ -288,13 +288,15 @@ svg.icon-white {
 }
 
 /* -------- UNIQUE -------- */
-img.logo {
+figure.logo svg {
   width: 45px;
+  height: 45px;
   margin-top: 19px;
   margin-bottom: 14px;
 }@media (min-width: 768px) {
-  img.logo {
-      width: 58px;
+  figure.logo svg {
+    height: 58px;
+    width: 58px;
   }
 }
 
