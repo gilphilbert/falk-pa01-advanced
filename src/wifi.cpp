@@ -40,24 +40,32 @@ short WiFiManager::loop() {
   if (tryConnect > 0) {
     int status = WiFi.status();
     if (status == WL_CONNECTED) {
+
       StaticJsonDocument<800> doc;
       JsonObject retObj = doc.to<JsonObject>();
-      retObj["success"] = true;
+      retObj["status"] = true;
       retObj["ssid"] = temp_ssid;
       retObj["ipaddr"] = (String)WiFi.localIP();
       String retStr;
       serializeJson(retObj, retStr);
       sendEvent("wireless", retStr);
+
       sysSettings.wifi.ssid = temp_ssid;
       sysSettings.wifi.pass = temp_key;
       tryConnect = 0;
-      state = FWIFI_COMMIT;
+      //state = FWIFI_COMMIT;
     } else if (millis() > tryConnect + tryConnectTimeout) {
+      StaticJsonDocument<200> doc;
+      JsonObject retObj = doc.to<JsonObject>();
+      retObj["status"] = false;
+      String retStr;
+      serializeJson(retObj, retStr);
+      sendEvent("wireless", retStr);
+
       //disconnect the STA so AP can stabilize again
       WiFi.disconnect();
       temp_ssid = "";
       temp_ssid = "";
-      sendEvent("wireless","{\"success\":false}");
       tryConnect = 0;
     }
     /* codes for WiFi.status()
@@ -107,7 +115,8 @@ bool WiFiManager::begin() {
   return true;
 }
 
-void WiFiManager::enableAP() {
+bool WiFiManager::enableAP() {
+  //if the wifi is already connected to an AP, just leave (they will need to factory reset for now)
   WiFi.mode(WIFI_AP_STA);
   WiFi.disconnect();
   WiFi.softAP(ap_ssid);
@@ -123,6 +132,8 @@ void WiFiManager::enableAP() {
   WiFiManager::loadServer();
 
   wifiConnectTimeout = millis() + WIFI_TIMEOUT;
+
+  return true;
 }
 
 String WiFiManager::translateEncryptionType(wifi_auth_mode_t encryptionType) {
@@ -485,9 +496,9 @@ void WiFiManager::loadServer() {
 
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
-    const char * check = doc["check"];
+    bool check = doc["check"];
 
-    if (check == "true") {
+    if (check == true) {
       //clear the preferences, probably need to send a message back to main via the loop
       //todo
     }
@@ -506,7 +517,6 @@ void WiFiManager::loadServer() {
     request->send(response);
   },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     extendTimeout();
-    display.firmwareUpload(0, 0);
 
     Update.onProgress(uploadProgress);
 

@@ -64,7 +64,7 @@ function getContent(fragmentId, callback) {
           cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
             cr.p('Select an input to edit'),
             sysStatus.inputs.map(v => {
-              return cr.div({ class: 'row  middle-xs padded pointer' + ((v.enabled) ? '' : 'disabled'), 'data-id': v.id, 'data-name': v.name, 'data-icon': v.icon, 'data-enabled': v.enabled, on: { click: (e) => { showModalInput(e); } } },
+              return cr.div({ class: 'row  middle-xs padded pointer' + ((v.enabled) ? '' : 'disabled'), 'data-id': v.id, 'data-name': v.name, 'data-icon': v.icon, 'data-enabled': v.enabled, on: { click: (e) => { editInput(e); } } },
                 cr.div({ class: "col-xs nogrow" },
                   getSVG(v.icon)
                 ),

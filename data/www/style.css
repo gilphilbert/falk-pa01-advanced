@@ -374,6 +374,56 @@ figure.logo svg {
   transition: background-color 0.3s ease;
 }
 
+label.input-selector {
+  display: block;
+  text-align: center;
+}
+label.input-selector svg {
+  margin: 0 auto;
+}
+label.input-selector input{
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+label.input-selector .selector {
+  display: inline-block;
+  height: 18px;
+  width: 18px;
+  border: 3px solid var(--mid-gray);
+  border-radius: 1000px;
+  margin-top: 8px;
+  transition: border-color 0.3s ease;
+}
+label.input-selector .selector:after {
+  content: '';
+  position: relative;
+  top: 0;
+  left: 0;
+  display: block;
+  margin: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 1000px;
+  background-color: var(--body-bg);
+  transition: background-color 0.3s ease;
+}
+
+label.input-selector input:checked ~ .selector:after {
+  background-color: var(--royal-blue);
+  transition: background-color 0.3s ease;
+}
+
+label.input-selector:hover .selector {
+  border: 3px solid var(--light-gray);
+  transition: border-color 0.3s ease;
+}
+label.input-selector input:checked ~ .selector {
+  border-color: var(--royal-blue);
+  transition: border-color 0.3s ease;
+}
 
 .message {
   background-color: var(--light-gray);

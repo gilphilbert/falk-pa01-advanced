@@ -165,7 +165,6 @@ void setup(){
   //update the display
   display.updateScreen();
 
-  //wifi.enableAP();
 }
 
 void muteLoop(int m) {
@@ -213,6 +212,7 @@ void wifiLoop(int m) {
     }
     wifibuttonstate = reading;
   } else if ((reading == LOW) && (wifiButtonPressTime > 0) && (m > wifiButtonPressTime + BUTTON_LONG_PRESS)) {
+    //bool success = wifi.enableAP();
     wifi.enableAP();
     wifiButtonPressTime = 0;
   }

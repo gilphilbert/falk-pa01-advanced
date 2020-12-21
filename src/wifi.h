@@ -24,7 +24,7 @@ class WiFiManager {
   public:
     bool begin();
     short loop();
-    void enableAP();
+    bool enableAP();
     void sendEvent(String event, String value);
     void sendEvent(String event, int value);
 };

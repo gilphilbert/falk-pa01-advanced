@@ -220,7 +220,7 @@ function connectWiFi(btn, ssid) {
 
 function factoryReset() {
   //we won't get anything from this request
-  window.fetch('/api/factoryReset', { method: 'POST', body: '{ check: "true" }' })
+  window.fetch('/api/factoryReset', { method: 'POST', body: '{ "check": true }' })
   //we'll get disconnected, so we should say goodbye!
 }
 
@@ -338,24 +338,29 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
           case 'wireless':
             var data = JSON.parse(obj[key])
-            if (data.status==false) {
+            if (data.status==true) {
+              //connection successful, show that page here...
+              var el =document.getElementById('settings-container')
+              el.firstChild.remove()
+              el.appendChild(
+                cr.div({ class: 'row' },
+                  cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
+                    cr.h2('Connection successful'),
+                    cr.p({ class: 'subtitle' }, 'This device is now connected to your wireless network.'),
+                    cr.p('You should now manage your device using it\'s address on your network: http://' + data.ipaddr),
+                    cr.button({ href: 'http://' + data.ipaddr, class: 'button' }, 'Go to new address')
+                  )
+                )
+              )
+              //should probably show the wifi/how to find this device (mDNS, etc.)
+              sysStatus.settings.wifi_ssid = data.ssid
+              sysStatus.ip_address = data.ipaddr
+            } else {
               var el = document.getElementById('connect-button')
               el.disabled = false
               el.innerText = 'Connect'
               el = document.getElementById('connect-helper').innerText = "Connect failed, try entering key again"
               document.getElementById('wifi-key').value = ''
-            } else {
-              //connection successful, show that page here...
-              var el =document.getElementById('settings-container')
-              el.firstChild.remove()
-              el.appendChild(
-                cr.h3('Connection successful'),
-                cr.p({ class: 'subtitle' }, 'This device is now connected to your wifi'),
-                cr.p(cr.a({ href: 'http://' + data.ipaddr }, 'Click here to be redirected to the new address on your network'))
-              )
-              //should probably show the wifi/how to find this device (mDNS, etc.)
-              sysStatus.settings.wifi_ssid = data.ssid
-              sysStatus.ip_address = data.ipaddr
             }
             break
 
@@ -377,55 +382,50 @@ window.addEventListener('DOMContentLoaded', (event) => {
     }
 })
 
-
-/* --------------------------------- */
-
-
-
-function showModalInput(e) {
+function editInput(e) {
   data = e.target.closest('.row').dataset
-  var df = new DocumentFragment()
-  df.appendChild(
-    cr.div({ class: 'modal-body' },
-      cr.h2('Edit input'),
-      cr.fieldset(
-        cr.label({ for: 'input-name' },
-            cr.p('Name'),
-            cr.input({ type: 'text', id: 'input-name', name: 'input-name', value: data.name })
-        )
-      ),
-      cr.fieldset(
-        cr.label(
-          cr.p('Icon'),
-          cr.div({ class: 'row' },
-            cr.label({ class: 'col-xs' }, getSVG('music', 'inline-block'), cr.input({ type: 'radio', value: 'music', name: 'input-icon' })),
-            cr.label({ class: 'col-xs' }, getSVG('radio', 'inline-block'), cr.input({ type: 'radio', value: 'radio', name: 'input-icon' })),
-            cr.label({ class: 'col-xs' }, getSVG('disc', 'inline-block'), cr.input({ type: 'radio', value: 'disc', name: 'input-icon' })),
-            cr.label({ class: 'col-xs' }, getSVG('laptop', 'inline-block'), cr.input({ type: 'radio', value: 'laptop', name: 'input-icon' })),
-            cr.label({ class: 'col-xs' }, getSVG('network', 'inline-block'), cr.input({ type: 'radio', value: 'network', name: 'input-icon' }))
+  console.log(data);
+  var icons = ['music', 'radio', 'disc', 'laptop', 'network']
+  var el =document.getElementById('settings-container')
+  el.firstChild.remove()
+  el.appendChild(
+    cr.div({ class: 'row' },
+      cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
+        cr.p('Edit Input ' + data.id),
+        cr.fieldset(
+          cr.h3('Name'),
+          cr.input({ type: 'text', id: 'input-name', value: data.name }),
+          //cr.span({ class: 'helper danger', id: 'connect-helper' })
+        ),
+        cr.fieldset(
+          cr.h3('Icon'),
+          cr.div({ class: 'row center-content' },
+            icons.map((v) => {
+              var c = cr.label({ class: 'input-selector' }, getSVG(v))
+              if(v == data.icon) {
+                c.appendChild(cr.input({ type: 'radio', value: v, name: 'input-icon', checked: true }))
+              } else {
+                c.appendChild(cr.input({ type: 'radio', value: v, name: 'input-icon' }))
+              }
+              c.appendChild(cr.span({ class: 'selector' }))
+              return cr.div({ class: 'col-xs-2'}, c);
+            })
           )
-        )
-      ),
-      cr.fieldset(
-        cr.label({ class: 'check-container' }, 'Enabled',
-            cr.input({ type: 'checkbox', id: 'input-enabled' }),
-            cr.span({ class: 'checkmark' })
-        )
-      )
-    )
-  )
-  df.querySelectorAll('input[type="radio"]').forEach(v => {
-    if (v.value == data.icon) {
-      v.setAttribute('checked', 'checked')
-    }
-  })
-  if (data.enabled == true) {
-    df.querySelector('input[type="checkbox"]').setAttribute('checked', 'checked')
-  }
-  df.appendChild(
-    cr.div({ class: 'modal-footer two' },
-        cr.button({ class: 'cancel', on: { click: (e) => { hideModal() } } }, 'Cancel'),
-        cr.button({ class: 'save', on: { click: () => { 
+          //cr.span({ class: 'helper danger', id: 'connect-helper' })
+        ),
+        cr.fieldset(
+          cr.h3('Enabled'), 
+          cr.label({ class: 'switch' },
+            ((data.enabled) ?
+              cr.input({ type: 'checkbox', id: 'input-enabled', checked: 'checked' })
+            :
+              cr.input({ type: 'checkbox', id: 'input-enabled' })
+            ),
+            cr.span({ class: 'slider round' })
+          ),
+        ),
+        cr.button({ class: 'button outline', on: { click: (e) => { loadContent() } } }, 'Cancel'),
+        cr.button({ class: 'button', id: 'connect-button', on: { click: (e) => {
           body = JSON.stringify({
             input: parseInt(data.id),
             name: document.querySelector('#input-name').value,
@@ -437,23 +437,12 @@ function showModalInput(e) {
             .then(data => {
               if (data.status == "ok") {
                 loadContent()
-                hideModal()
+              } else {
+                console.log('failed')
               }
             })
         } } }, 'Save')
+      )
     )
   )
-  showModal(df)
-}
-
-function showModal(content) {
-  var mc = document.querySelector('#modal .modal-content')
-  while(mc.hasChildNodes()) {
-    mc.removeChild(mc.firstChild)
-  }
-  mc.appendChild(content)
-  document.getElementById('modal').classList.remove('hidden')
-}
-function hideModal() {
-  document.getElementById('modal').classList.add('hidden')
 }
