@@ -2,7 +2,7 @@
 
 DeviceSettings sysSettings;
 
-String fw_version = "0.2.14";
+String fw_version = "0.2.16";
 
 int FlashCommit = 0;
 

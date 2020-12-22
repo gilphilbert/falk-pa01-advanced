@@ -192,7 +192,7 @@ function getContent(fragmentId, callback) {
             cr.fieldset(
               cr.h3('Factory reset'),
               cr.p({ class: 'subtitle' }, 'Reset the device back to factory defaults - this will reset all inputs and any network settings'),
-              cr.button({ class: 'button danger', on: { click: () => { factoryReset() } } }, 'Factory reset')
+              cr.button({ class: 'button danger', on: { click: () => { document.getElementById('reset-page').classList.add('shown') } } }, 'Factory reset')
             ),
           )
         )
@@ -260,8 +260,8 @@ function getContent(fragmentId, callback) {
             ),
             cr.div({ class: 'hidden', id: 'success-container' },
               cr.div({ class: 'message success' },
-                cr.div({ class: 'heading' }, 'Firmware updated sucessfully'),
-                cr.span({ class: 'block pointer', on: { click: () => { window.location.reload() } } }, 'Click here to reload the web UI')
+                cr.div({ class: 'heading' }, 'Firmware downloaded successfully'),
+                cr.span({ class: 'block pointer', on: { click: () => { window.location.reload() } } }, 'The firmware will now be installed. Check the front of the unit for progress. Click here to reload the web UI once the update is complete')
               )
             ),
             cr.div({ class: 'hidden', id: 'error-container' },

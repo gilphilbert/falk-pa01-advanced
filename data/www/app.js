@@ -219,6 +219,7 @@ function connectWiFi(btn, ssid) {
 }
 
 function factoryReset() {
+  console.log("here");
   //we won't get anything from this request
   window.fetch('/api/factoryReset', { method: 'POST', body: '{ "check": true }' })
   //we'll get disconnected, so we should say goodbye!

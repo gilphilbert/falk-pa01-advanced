@@ -1,6 +1,9 @@
 #include "wifi.h"
 #include "falk-pre-conf.h"
 
+#include <Preferences.h>
+Preferences pref;
+
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
 
@@ -484,7 +487,6 @@ void WiFiManager::loadServer() {
 
   server.on("/api/factoryReset", HTTP_POST, [](AsyncWebServerRequest *request){
     extendTimeout();
-
     // handle the instance where no data is provided
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
     extendTimeout();
@@ -494,6 +496,9 @@ void WiFiManager::loadServer() {
     bool check = doc["check"];
 
     if (check == true) {
+      pref.begin("falk-pre", false);
+      pref.clear();
+      ESP.restart();
       //clear the preferences, probably need to send a message back to main via the loop
       //todo
     }

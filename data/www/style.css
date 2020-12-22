@@ -25,6 +25,7 @@
   --disabled: #bbbdbf;
 
   --green: #4dc396;
+  --green-light: #62daac;
   --green-lightest: #ddf1ea;
   --yellow-lightest: #f0ebbc;
   --yellow: #e7d42b;
@@ -160,6 +161,23 @@ p.text-sm {
   background-color: var(--red-light)!important;
   border-color: var(--red-light)!important;
 }
+.button.success {
+  background-color: var(--green);
+  border-color: var(--green);
+}
+.button.success:hover {
+  background-color: var(--green-light)!important;
+  border-color: var(--green-light)!important;
+}
+.button.white-danger {
+  background-color: var(--white);
+  border-color: var(--white);
+  color: var(--red);
+}
+.button.white-danger:hover {
+  background-color: var(--red-light)!important;
+  border-color: var(--red-light)!important;
+}
 
 .row.pointer:hover .button.button-hidden {
   background-color: var(--light-blue)!important;
@@ -288,12 +306,78 @@ svg.icon-white {
 }
 
 /* -------- UNIQUE -------- */
+#settings-icon {
+  position: absolute;
+  top: 22px;
+  right: 20px;
+}
+@media (min-width: 768px) {
+  #settings-icon {
+    top: 28px;
+    right: 40px;
+  }
+}
+
+#reset-page {
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0,0,0,0.15);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+#reset-page.shown {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: all;
+}
+#reset-page .content {
+  height: 300px;
+  width: 500px;
+  background-color: var(--red);
+  color: var(--white);
+  border-radius: 8px;
+  position: absolute;
+  left: calc(100vw / 2 - 250px);
+  top: -300px;
+  box-shadow: 0 0 1px 1px rgba(0,0,0,0.1);
+  transition: top 0.3s ease;
+  text-align: center;
+}
+@media (max-width: 768px) {
+  #reset-page .content {
+    width: 90vw;
+    left: 5vw;
+  }
+}
+#reset-page.shown .content {
+  top: calc(100vh / 2 - 150px);
+  transition: top 0.3s ease;
+}
+#reset-page .content h2 {
+  margin-top: 0;
+  padding-top: 45px;
+}
+#reset-page .content p {
+  padding: 0 30px;
+}
+#reset-page .btn-container {
+  height: 120px;
+  width: 100%;
+  text-align: center;
+  padding-top: 40px;
+}
+
 figure.logo svg {
   width: 45px;
   height: 45px;
   margin-top: 19px;
   margin-bottom: 14px;
-}@media (min-width: 768px) {
+}
+@media (min-width: 768px) {
   figure.logo svg {
     height: 58px;
     width: 58px;
