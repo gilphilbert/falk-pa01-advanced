@@ -137,10 +137,6 @@ function volumeChange(e) {
     volume: parseInt(e.target.value)
   })
   window.fetch('/api/volume', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
 }
 
 function inputChange(el) {
@@ -148,10 +144,6 @@ function inputChange(el) {
     input: parseInt(el.closest('.input-box').dataset['id'])
   })
   window.fetch('/api/input', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
 }
 
 function setDim(e) {
@@ -159,10 +151,6 @@ function setDim(e) {
     state: ((e.target.checked==false) ? 0 : 1)
   })
   window.fetch('/api/settings/dim', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
     .catch(() => {
       e.target.checked = !e.target.checked
     })
@@ -173,10 +161,6 @@ function setAbsoluteVolume(e) {
     state: ((e.target.checked==false) ? 0 : 1)
   })
   window.fetch('/api/settings/absoluteVol', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
     .catch(() => {
       e.target.checked = !e.target.checked
     })
@@ -185,24 +169,10 @@ function setAbsoluteVolume(e) {
 function setMaxVolume(v) {
   body = JSON.stringify({ value: v })
   window.fetch('/api/settings/maxVol', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
-    .catch((e) => {
-      console.log(e)
-    })
 }
 function setMaxStartupVolume(v) {
   body = JSON.stringify({ value: v })
   window.fetch('/api/settings/maxStartupVol', { method: 'POST', body: body })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-    })
-    .catch(() => {
-      console.log(e)
-    })
 }
 
 function connectWiFi(btn, ssid) {
@@ -219,7 +189,6 @@ function connectWiFi(btn, ssid) {
 }
 
 function factoryReset() {
-  console.log("here");
   //we won't get anything from this request
   window.fetch('/api/factoryReset', { method: 'POST', body: '{ "check": true }' })
   //we'll get disconnected, so we should say goodbye!
@@ -349,7 +318,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     cr.h2('Connection successful'),
                     cr.p({ class: 'subtitle' }, 'This device is now connected to your wireless network.'),
                     cr.p('You should now manage your device using it\'s address on your network: http://' + data.ipaddr + '. Connect to your wireless network then click the button below.'),
-                    cr.button({ href: 'http://' + data.ipaddr, class: 'button' }, 'Go to new address')
+                    cr.a({ href: 'http://' + data.ipaddr, class: 'button' }, 'Go to new address')
                   )
                 )
               )

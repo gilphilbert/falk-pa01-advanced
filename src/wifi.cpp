@@ -246,11 +246,7 @@ void WiFiManager::loadServer() {
     }
     // create a JSON object for the response
     doc.clear();
-    JsonObject retObj = doc.to<JsonObject>();
-
-    retObj["max"] = VOL_MAX;
-    retObj["current"] = vol;
-
+    
     //generate the string
     String retStr;
     serializeJson(doc, retStr);

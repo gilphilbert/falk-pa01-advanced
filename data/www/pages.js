@@ -100,7 +100,7 @@ function getContent(fragmentId, callback) {
             cr.p('Change system settings that affect the display and audio'),
             cr.fieldset(
               cr.h3('Dim screen'),
-              cr.p({ class: 'subtitle' }, 'Automatically dims the screen to a lower level after 10 seconds'),
+              cr.p({ class: 'subtitle' }, 'Automatically dims the screen to a lower level after 10 seconds. May extend the life of your display (recommended)'),
               cr.label({ class: 'switch' },
                 ((sysStatus.settings.dim) ?
                   cr.input({ type: 'checkbox', id: 'settings-dim', checked: 'checked', on: { change: (e) => { setDim(e) } } })
@@ -112,7 +112,7 @@ function getContent(fragmentId, callback) {
             ),
             cr.fieldset(
               cr.h3('Absolute Volume'),
-              cr.p({ class: 'subtitle' }, 'Show the actual volume level (0-255) instead of a percentage'),
+              cr.p({ class: 'subtitle' }, 'Show the actual volume level (0-' + sysStatus.volume.max + ') instead of a percentage'),
               cr.label({ class: 'switch' },
                 ((sysStatus.settings.absoluteVol) ?
                   cr.input({ type: 'checkbox', id: 'settings-absolute-vol', checked: 'checked', on: { change: (e) => { setAbsoluteVolume(e) } } })
