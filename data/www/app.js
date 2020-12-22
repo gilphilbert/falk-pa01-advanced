@@ -347,7 +347,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                   cr.div({ class: 'col-lg-4 col-lg-offset-4 col-xs-12' },
                     cr.h2('Connection successful'),
                     cr.p({ class: 'subtitle' }, 'This device is now connected to your wireless network.'),
-                    cr.p('You should now manage your device using it\'s address on your network: http://' + data.ipaddr),
+                    cr.p('You should now manage your device using it\'s address on your network: http://' + data.ipaddr + '. Connect to your wireless network then click the button below.'),
                     cr.button({ href: 'http://' + data.ipaddr, class: 'button' }, 'Go to new address')
                   )
                 )
@@ -436,6 +436,9 @@ function editInput(e) {
             .then(response => response.json())
             .then(data => {
               if (data.status == "ok") {
+                sysStatus.inputs[parseInt(data.id)].name = document.querySelector('#input-name').value
+                sysStatus.inputs[parseInt(data.id)].enabled = document.querySelector('#input-enabled').checked
+                sysStatus.inputs[parseInt(data.id)].icon = document.querySelector('input[name="input-icon"]:checked').value
                 loadContent()
               } else {
                 console.log('failed')

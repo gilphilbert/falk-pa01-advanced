@@ -64,7 +64,6 @@ typedef struct {
   DeviceInput inputs [INP_MAX];
   uint16_t saved = 0;
   int dim = 1;
-  int icon = 0;
   int maxVol = VOL_MAX;
   int maxStartVol = VOL_MAX;
   short absoluteVol = 0;

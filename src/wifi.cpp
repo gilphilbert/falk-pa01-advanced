@@ -7,10 +7,12 @@ AsyncEventSource events("/events");
 bool shouldReboot = false;
 int wifiConnectTimeout = 0;
 
-const char * temp_ssid;
-const char * temp_key;
+String temp_ssid;
+String temp_key;
 int tryConnect = 0;
 short tryConnectTimeout = 12000;
+
+int beginWiFiTimer = 0;
 
 const char* ap_ssid = "FALK-PA01";
 
@@ -20,8 +22,7 @@ void uploadProgress(int val, int total) {
 }
 
 /* loop detects reboot needs, implements the AP timeout and detects whether we're connected during setup */
-short WiFiManager::loop() {
-  short state = FWIFI_IDLE;
+void WiFiManager::loop() {
   
   if (shouldReboot) {
       yield();
@@ -45,7 +46,7 @@ short WiFiManager::loop() {
       JsonObject retObj = doc.to<JsonObject>();
       retObj["status"] = true;
       retObj["ssid"] = temp_ssid;
-      retObj["ipaddr"] = (String)WiFi.localIP();
+      retObj["ipaddr"] = WiFi.localIP().toString();
       String retStr;
       serializeJson(retObj, retStr);
       sendEvent("wireless", retStr);
@@ -53,7 +54,8 @@ short WiFiManager::loop() {
       sysSettings.wifi.ssid = temp_ssid;
       sysSettings.wifi.pass = temp_key;
       tryConnect = 0;
-      //state = FWIFI_COMMIT;
+      //store the new credentials
+      FlashCommit = millis();
     } else if (millis() > tryConnect + tryConnectTimeout) {
       StaticJsonDocument<200> doc;
       JsonObject retObj = doc.to<JsonObject>();
@@ -79,44 +81,38 @@ short WiFiManager::loop() {
        255 = WL_NO_SHIELD
     */
   }
-  return state;
+
+  if (beginWiFiTimer > 0) {
+    if (WiFi.isConnected()) {
+      Serial.println("Connected to WiFi");
+      beginWiFiTimer = 0;
+      MDNS.begin(sysSettings.wifi.hostname.c_str());
+      WiFiManager::loadServer();
+    } else {
+      if (millis() > beginWiFiTimer) {
+        WiFi.disconnect();
+        Serial.println("Couldn't connect to WiFi");
+      }
+    }
+
+  }
 }
 
-bool WiFiManager::begin() {
+void WiFiManager::begin() {
   WiFi.setHostname(sysSettings.wifi.hostname.c_str());
 
   if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
-    return false;
+    return;
   }
+
+  beginWiFiTimer = millis() + 10000;
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(sysSettings.wifi.ssid.c_str(), sysSettings.wifi.pass.c_str());
-
-  Serial.print("Connecting to Wifi");
-  int now = millis();
-  bool kill = false;
-  while (WiFi.isConnected() == false && kill == false) {
-    Serial.print(".");
-    delay(50);
-    if (millis() + 10000 > now) {
-      kill = true;
-    }
-  }
-  Serial.println();
-  MDNS.begin(sysSettings.wifi.hostname.c_str());
-
-  if (kill == true) {
-    Serial.println("Couldn't connect to Wifi");
-    return false;
-  }
-
-  WiFiManager::loadServer();
-
-  return true;
+  Serial.println("Connecting to WiFi");
 }
 
 bool WiFiManager::enableAP() {
-  //if the wifi is already connected to an AP, just leave (they will need to factory reset for now)
   WiFi.mode(WIFI_AP_STA);
   WiFi.disconnect();
   WiFi.softAP(ap_ssid);
@@ -473,13 +469,12 @@ void WiFiManager::loadServer() {
 
     StaticJsonDocument<200> doc;
     deserializeJson(doc, (const char*) data);
-    temp_ssid = doc["ssid"];
-    temp_key = doc["key"];
+    JsonObject obj = doc.as<JsonObject>();
 
-    Serial.println(temp_ssid);
-    Serial.println(temp_key);
+    temp_ssid = obj["ssid"].as<String>();
+    temp_key = obj["key"].as<String>();
 
-    WiFi.begin(temp_ssid, temp_key);
+    WiFi.begin(temp_ssid.c_str(), temp_key.c_str());
     tryConnect = millis();
 
     //no response from this function
@@ -522,7 +517,7 @@ void WiFiManager::loadServer() {
 
     if(!index){
       Serial.printf("Update Start: %s\n", filename.c_str());
-      if (filename != "spiffs.bin" && filename != "spiffs.bin.gz" && filename != "firmware.bin") {
+      if (filename != "spiffs.bin" && filename != "firmware.bin") {
         return request->send(200, "text/plain", "Invalid firmware");
       }
       int cmd = (filename == "spiffs.bin" || filename == "spiffs.bin.gz") ? U_SPIFFS : U_FLASH;

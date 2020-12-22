@@ -22,8 +22,8 @@ class WiFiManager {
     String getNetworks();
     void loadServer();
   public:
-    bool begin();
-    short loop();
+    void begin();
+    void loop();
     bool enableAP();
     void sendEvent(String event, String value);
     void sendEvent(String event, int value);

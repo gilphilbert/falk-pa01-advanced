@@ -5,6 +5,7 @@ TO DO:
 * Join local wifi instead of AP
 */
 #include <Arduino.h>
+#include "ArduinoJson.h"
 #include <driver/gpio.h>
 #include <Wire.h>
 
@@ -95,6 +96,68 @@ void spiffsUpdate() {
   ESP.restart();
 }
 
+void saveSettings() {
+  // create a JSON object for the response
+  StaticJsonDocument<800> doc;
+  JsonObject settings = doc.to<JsonObject>();
+
+  settings["volume"] = sysSettings.volume;
+  settings["input"] = sysSettings.input;
+  JsonArray settings_inputs = settings.createNestedArray("inputs");
+  for (int i = 0; i < INP_MAX; i++) {
+    JsonObject io = settings_inputs.createNestedObject();
+    io["name"] = sysSettings.inputs[i].name;
+    io["icon"] = sysSettings.inputs[i].icon;
+    io["enabled"] = sysSettings.inputs[i].enabled;
+  }
+  settings["saved"] = sysSettings.saved;
+  settings["dim"] = sysSettings.dim;
+  settings["maxVol"] = sysSettings.maxVol;
+  settings["maxStartVol"] = sysSettings.maxStartVol;
+  settings["absoluteVol"] = sysSettings.absoluteVol;
+  JsonObject settings_wifi = settings.createNestedObject("wifi");
+  settings_wifi["ssid"] = sysSettings.wifi.ssid;
+  settings_wifi["pass"] = sysSettings.wifi.pass;
+  settings_wifi["hostname"] = sysSettings.wifi.hostname;  
+
+  //generate the string
+  String retStr;
+  serializeJson(settings, retStr);
+
+  //write the settings
+  preferences.putString("settingsString", retStr);
+}
+
+void restoreSettings() {
+  String str = preferences.getString("settingsString");
+  if (str=="") {
+    return;
+  }
+  StaticJsonDocument<800> doc;
+  DeserializationError error = deserializeJson(doc, str);
+  JsonObject settings = doc.as<JsonObject>();
+
+  if (error) {
+    Serial.println("Failed to open settings");
+    return;
+  }
+  sysSettings.volume = settings["volume"];
+  sysSettings.input = settings["input"];
+  for(int i=0; i<INP_MAX; i++) {
+    sysSettings.inputs[i].enabled = settings["inputs"][i]["enabled"];
+    sysSettings.inputs[i].name = settings["inputs"][i]["name"].as<String>();
+    sysSettings.inputs[i].icon = settings["inputs"][i]["icon"].as<String>();
+  }
+  sysSettings.saved = settings["saved"];
+  sysSettings.dim = settings["dim"];
+  sysSettings.maxVol = settings["maxVol"];
+  sysSettings.maxStartVol = settings["maxStartVol"];
+  sysSettings.absoluteVol = settings["absoluteVol"];
+  sysSettings.wifi.ssid = settings["wifi"]["ssid"].as<String>();
+  sysSettings.wifi.pass = settings["wifi"]["pass"].as<String>();
+  sysSettings.wifi.hostname = settings["wifi"]["hostname"].as<String>();
+}
+
 void setup(){	
 	Serial.begin(9600);
   Serial.setDebugOutput(true);
@@ -123,8 +186,8 @@ void setup(){
 
   //start preferences
   preferences.begin("falk-pre", false);
-  preferences.clear();
-  preferences.getBytes("settings", &sysSettings, sizeof(DeviceSettings));
+  //preferences.clear();
+  restoreSettings();
 
   //add some default values if this is our first boot
   if (sysSettings.saved == 0) {
@@ -134,7 +197,6 @@ void setup(){
     }
   }
 
-  if(sysSettings.maxStartVol == -1) { sysSettings.maxStartVol = VOL_MAX; }
   if (sysSettings.volume > sysSettings.maxStartVol) {
     sysSettings.volume = sysSettings.maxStartVol;
   }
@@ -165,6 +227,7 @@ void setup(){
   //update the display
   display.updateScreen();
 
+  wifi.begin();
 }
 
 void muteLoop(int m) {
@@ -216,11 +279,7 @@ void wifiLoop(int m) {
     wifi.enableAP();
     wifiButtonPressTime = 0;
   }
-  short state = wifi.loop();
-  if (state == FWIFI_COMMIT) {
-    //we've recieved new wifi credentials, so let's save them
-    FlashCommit = m;
-  }
+  wifi.loop();
 }
 
 
@@ -327,8 +386,8 @@ void loop() {
   powerLoop(m);
 
   if ((FlashCommit > 0) && (m > FlashCommit + COMMIT_TIMEOUT)) {
-      preferences.putBytes("settings", &sysSettings, sizeof(DeviceSettings));
-      FlashCommit = 0;
+    saveSettings();
+    FlashCommit = 0;
   }
 
   display.loop();
