@@ -12,10 +12,10 @@ int wifiConnectTimeout = 0;
 
 String temp_ssid;
 String temp_key;
-int tryConnect = 0;
-short tryConnectTimeout = 12000;
 
-int beginWiFiTimer = 0;
+bool scanning = false;
+
+bool disconnected = false;
 
 const char* ap_ssid = "FALK-PA01";
 
@@ -26,92 +26,109 @@ void uploadProgress(int val, int total) {
 
 /* loop detects reboot needs, implements the AP timeout and detects whether we're connected during setup */
 void WiFiManager::loop() {
+  int status = WiFi.status();
+
+  // if we're trying to reconnect and it's failed, try again
+  if (disconnected && status == WL_CONNECT_FAILED) {
+    WiFi.reconnect();
+  }
   
+  // if we need to reboot as part of an update, do it now
   if (shouldReboot) {
       yield();
       delay(1000);
       yield();
-      esp_task_wdt_init(1,true);
+      esp_task_wdt_init(1, true);
       esp_task_wdt_add(NULL);
       while(true);
   }
+
+  // this detects whether anyone is connected to the access point (in AP mode)
   if (wifiConnectTimeout > 0 && millis() > wifiConnectTimeout) {
     wifiConnectTimeout = 0;
     WiFi.mode(WIFI_MODE_STA);
     display.setAPMode(false);
   }
+}
 
-  if (tryConnect > 0) {
-    int status = WiFi.status();
-    if (status == WL_CONNECTED) {
+void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.println("Connected to AP successfully!");
+}
 
-      StaticJsonDocument<800> doc;
-      JsonObject retObj = doc.to<JsonObject>();
-      retObj["status"] = true;
-      retObj["ssid"] = temp_ssid;
-      retObj["ipaddr"] = WiFi.localIP().toString();
-      String retStr;
-      serializeJson(retObj, retStr);
-      sendEvent("wireless", retStr);
+void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.print("WiFi connected: ");
+  Serial.println(WiFi.localIP());
 
-      sysSettings.wifi.ssid = temp_ssid;
-      sysSettings.wifi.pass = temp_key;
-      tryConnect = 0;
-      //store the new credentials
-      FlashCommit = millis();
-    } else if (millis() > tryConnect + tryConnectTimeout) {
-      StaticJsonDocument<200> doc;
-      JsonObject retObj = doc.to<JsonObject>();
-      retObj["status"] = false;
-      String retStr;
-      serializeJson(retObj, retStr);
-      sendEvent("wireless", retStr);
+  StaticJsonDocument<800> doc;
+  JsonObject retObj = doc.to<JsonObject>();
+  retObj["status"] = true;
+  retObj["ssid"] = temp_ssid;
+  retObj["ipaddr"] = WiFi.localIP().toString();
+  String retStr;
+  serializeJson(retObj, retStr);
+  _sendEvent("wireless", retStr);
 
-      //disconnect the STA so AP can stabilize again
-      WiFi.disconnect();
-      temp_ssid = "";
-      temp_ssid = "";
-      tryConnect = 0;
-    }
-    /* codes for WiFi.status()
-       0 = WL_IDLE_STATUS
-       1 = WL_NO_SSID_AVAIL
-       2 = WL_SCAN_COMPLETED
-       3 = WL_CONNECTED
-       4 = WL_CONNECT_FAILED
-       5 = WL_CONNECTION_LOST
-       6 = WL_DISCONNECTED
-       255 = WL_NO_SHIELD
-    */
-  }
+  MDNS.begin(sysSettings.hostname.c_str());
+  loadServer();
+  disconnected = false;
 
-  if (beginWiFiTimer > 0) {
-    if (WiFi.isConnected()) {
-      Serial.println("Connected to WiFi");
-      beginWiFiTimer = 0;
-      MDNS.begin(sysSettings.wifi.hostname.c_str());
-      WiFiManager::loadServer();
-    } else {
-      if (millis() > beginWiFiTimer) {
-        WiFi.disconnect();
-        Serial.println("Couldn't connect to WiFi");
-      }
-    }
+  display.wifiConnected(true);
 
+  if (temp_ssid != "") {
+    sysSettings.ssid = temp_ssid;
+    sysSettings.pass = temp_key;
+    temp_ssid = "";
+    temp_key = "";
+    saveSettings();
+    WiFi.softAPdisconnect();
+    display.setAPMode(false);
   }
 }
 
-void WiFiManager::begin() {
-  WiFi.setHostname(sysSettings.wifi.hostname.c_str());
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info){
+  if (info.wifi_sta_disconnected.reason == 202) {
+    Serial.println("Incorrect password");
 
-  if(sysSettings.wifi.ssid == "" || sysSettings.wifi.pass == "") {
+    _sendEvent("wireless", "{\"status\":\"false\"}");
+
+    //disconnect the STA so AP can stabilize again
+    WiFi.disconnect();
+    temp_ssid = "";
+    temp_ssid = "";
+  }
+
+  display.wifiConnected(false);
+
+  Serial.println("Disconnected from WiFi access point. Reason:");
+  Serial.println(info.wifi_sta_disconnected.reason);
+  Serial.println("Trying to Reconnect");
+  disconnected = true;
+  WiFi.reconnect();
+}
+
+void ScanDone(WiFiEvent_t event, WiFiEventInfo_t info){
+  getNetworks();
+}
+
+void WiFiManager::begin() {
+  WiFi.setHostname(sysSettings.hostname.c_str());
+
+  //setup our events
+  WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
+  WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+  WiFi.onEvent(WiFiStationDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+  WiFi.onEvent(ScanDone, WiFiEvent_t::ARDUINO_EVENT_WIFI_SCAN_DONE);
+
+  Serial.print("Attempting to connect to wifi network: ");
+  Serial.println(sysSettings.ssid);
+  if(sysSettings.ssid == "" || sysSettings.pass == "") {
     return;
   }
 
-  beginWiFiTimer = millis() + 10000;
+  disconnected = true;
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(sysSettings.wifi.ssid.c_str(), sysSettings.wifi.pass.c_str());
+  WiFi.begin(sysSettings.ssid.c_str(), sysSettings.pass.c_str());
   Serial.println("Connecting to WiFi");
 }
 
@@ -120,7 +137,7 @@ bool WiFiManager::enableAP() {
   WiFi.disconnect();
   WiFi.softAP(ap_ssid);
   IPAddress IP = WiFi.softAPIP();
-  MDNS.begin(sysSettings.wifi.hostname.c_str());
+  MDNS.begin(sysSettings.hostname.c_str());
 
   Serial.print("AP IP address: ");
   Serial.println(IP);
@@ -128,7 +145,7 @@ bool WiFiManager::enableAP() {
   display.setAPMode(true);
   display.wifiScreen(ap_ssid);
 
-  WiFiManager::loadServer();
+  loadServer();
 
   wifiConnectTimeout = millis() + WIFI_TIMEOUT;
 
@@ -156,23 +173,32 @@ String WiFiManager::translateEncryptionType(wifi_auth_mode_t encryptionType) {
   return encType;
 }
 
-String WiFiManager::getNetworks() {
-  int numberOfNetworks = WiFi.scanNetworks();
- 
-  StaticJsonDocument<4000> doc;
-  JsonArray retArr = doc.to<JsonArray>();
-
-  for (int i = 0; i < numberOfNetworks; i++) {
-    JsonObject obj = retArr.createNestedObject();
-    obj["ssid"] = WiFi.SSID(i);
-    obj["signal"] = WiFi.RSSI(i);
-    obj["mac"] = WiFi.BSSIDstr(i);
-    obj["security"] = translateEncryptionType(WiFi.encryptionType(i));
+void getNetworks() {
+  int numberOfNetworks = WiFi.scanComplete();
+  if(numberOfNetworks == -2){
+    Serial.println("No networks yet...");
+    WiFi.scanNetworks(true);
+    return;
   }
+
+  scanning = false;
+
+  String json = "[";
+  for (int i = 0; i < numberOfNetworks; i++) {
+    if(i) json += ",";
+    json += "{";
+    json += "\"ssid\":\""+WiFi.SSID(i)+"\"";
+    json += ",\"signal\":"+String(WiFi.RSSI(i));
+    json += ",\"mac\":\""+WiFi.BSSIDstr(i)+"\"";
+    json += ",\"security\":"+String(WiFi.encryptionType(i));
+    json += "}";
+  }
+  json += "]";
+
+  WiFi.scanDelete();
+
   //generate the string
-  String retStr;
-  serializeJson(retArr, retStr);
-  return retStr;
+  events.send(json.c_str(), "scan");
 }
 
 void extendTimeout() {
@@ -181,7 +207,7 @@ void extendTimeout() {
   }
 }
 
-void WiFiManager::loadServer() {
+void loadServer() {
   if(!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -218,7 +244,7 @@ void WiFiManager::loadServer() {
     JsonObject setObj = retObj.createNestedObject("settings");
     setObj["dim"] = sysSettings.dim;
     setObj["absoluteVol"] = sysSettings.absoluteVol;
-    setObj["wifi_ssid"] = sysSettings.wifi.ssid;
+    setObj["wifi_ssid"] = sysSettings.ssid;
     
     JsonObject fwObj = retObj.createNestedObject("firmware");
     fwObj["fw"] = fw_version;
@@ -401,7 +427,7 @@ void WiFiManager::loadServer() {
         if (sysSettings.volume > v) {
           sysSettings.volume = v;
           volEnc.count = v;
-          display.updateScreen();
+          //display.updateScreen();
         }
       } else {
         message = "invalid: value";
@@ -455,8 +481,11 @@ void WiFiManager::loadServer() {
   server.on("/api/networks", HTTP_GET, [&](AsyncWebServerRequest *request){
     extendTimeout();
 
-    String networks = WiFiManager::getNetworks();
-    return request->send(200, "application/json", networks);
+    WiFi.scanNetworks();
+    scanning = true;
+    Serial.println("Start scanning...");
+    return request->send(200, "application/json", "");
+
   });
 
   server.on("/api/setWireless", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -474,7 +503,6 @@ void WiFiManager::loadServer() {
     temp_key = obj["key"].as<String>();
 
     WiFi.begin(temp_ssid.c_str(), temp_key.c_str());
-    tryConnect = millis();
 
     //no response from this function
     String retStr = "{}";
@@ -554,14 +582,20 @@ void WiFiManager::loadServer() {
   server.addHandler(&events);
 
   server.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=86400").setDefaultFile("index.html");
-  //server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
   server.begin();
 }
 
 /* event stuff */
+void WiFiManager::sendEvent(String event, String value) {
+  _sendEvent(event, value);
+}
 
-void WiFiManager::sendEvent(String event, String value) {    // create a JSON object for the response
+void WiFiManager::sendEvent(String event, int value) {
+  _sendEvent(event, value);
+}
+
+void _sendEvent(String event, String value) {    // create a JSON object for the response
   StaticJsonDocument<200> doc;
   JsonObject retObj = doc.to<JsonObject>();
   retObj[event] = value;
@@ -570,7 +604,7 @@ void WiFiManager::sendEvent(String event, String value) {    // create a JSON ob
   events.send(retStr.c_str(),"message",millis());
 }
 
-void WiFiManager::sendEvent(String event, int value) {
+void _sendEvent(String event, int value) {
   StaticJsonDocument<200> doc;
   JsonObject retObj = doc.to<JsonObject>();
   retObj[event] = value;

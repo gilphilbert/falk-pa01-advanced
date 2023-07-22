@@ -73,6 +73,11 @@ void Display::updateScreen() {
     u8g2.drawGlyph(124,62,0x48);
   }
 
+  if (_wifi_state == true) {
+    u8g2.setFont(u8g2_font_open_iconic_embedded_1x_t);
+    u8g2.drawGlyph(124,62,0x50);
+  }
+
   //max brightness
   u8g2.setContrast(255);
   //write data to screen
@@ -142,9 +147,10 @@ void Display::firmwareUpload(int val, int total) {
     u8g2.drawBox(80, 28, w, 12);
   }
 
+  u8g2.setFont(u8g2_font_crox1h_tr);
   string = "Do not power off";
   x = 128 - (u8g2.getStrWidth(string.c_str()) / 2);
-  u8g2.drawStr(x, SCREEN_HEIGHT, string.c_str());
+  u8g2.drawStr(x, SCREEN_HEIGHT - 5, string.c_str());
 
   u8g2.setContrast(255);
   u8g2.sendBuffer();
@@ -162,11 +168,10 @@ void Display::off() {
 
 void Display::setAPMode(bool mode) {
   _access_point = mode;
-  if (mode == false) {
-    Display::updateScreen();
-  }
+  Display::updateScreen();
 }
 
 void Display::wifiConnected(bool state) {
   _wifi_state = state;
+  Display::updateScreen();
 }

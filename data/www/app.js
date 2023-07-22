@@ -22,10 +22,6 @@ function loadContent () {
             buildWiFi(data)
           } else {
             window.fetch('/api/networks')
-            .then(response => response.json())
-            .then(data => {
-              buildWiFi(data)
-            })
           }
           break
     }
@@ -272,6 +268,11 @@ window.addEventListener('DOMContentLoaded', (event) => {
             document.getElementById('banner').classList.add('drop')
         }
       }, false)
+
+      source.addEventListener('scan', function(e) {
+        var obj = JSON.parse(e.data)
+        buildWiFi(obj)
+      })
     
       source.addEventListener('message', function(e) {
         var obj = JSON.parse(e.data)
@@ -344,7 +345,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
     .then(response => response.json())
     .then(data => {
         sysStatus = data
-        console.log(sysStatus)
         loadContent()
         window.addEventListener('hashchange', loadContent)
       }
@@ -354,7 +354,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 function editInput(e) {
   data = e.target.closest('.row').dataset
-  console.log(data);
   var icons = ['music', 'radio', 'disc', 'laptop', 'network']
   var el =document.getElementById('settings-container')
   el.firstChild.remove()

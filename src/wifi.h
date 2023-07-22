@@ -16,11 +16,19 @@
 #define FWIFI_IDLE              0
 #define FWIFI_COMMIT            1
 
+void getNetworks();
+void loadServer();
+void _sendEvent(String event, String value);
+void _sendEvent(String event, int value);
+
 class WiFiManager {
   private:
     String translateEncryptionType(wifi_auth_mode_t encryptionType);
-    String getNetworks();
-    void loadServer();
+    //void loadServer();
+    //void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info);
+    //void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info);
+    //void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info);
+
   public:
     void begin();
     void loop();

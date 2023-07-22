@@ -9,8 +9,6 @@ TO DO:
 #include <driver/gpio.h>
 #include <Wire.h>
 
-#include <Preferences.h>
-
 // OTHER INTERNAL CLASSES
 
 // OUR SYSTEM CONFIGURATION
@@ -24,8 +22,6 @@ VolumeController volume;
 
 #include "wifi.h"
 WiFiManager wifi;
-
-Preferences preferences;
 
 // to handle mute state
 int muteButtonState;
@@ -96,72 +92,15 @@ void spiffsUpdate() {
   ESP.restart();
 }
 
-void saveSettings() {
-  // create a JSON object for the response
-  StaticJsonDocument<800> doc;
-  JsonObject settings = doc.to<JsonObject>();
-
-  settings["volume"] = sysSettings.volume;
-  settings["input"] = sysSettings.input;
-  JsonArray settings_inputs = settings.createNestedArray("inputs");
-  for (int i = 0; i < INP_MAX; i++) {
-    JsonObject io = settings_inputs.createNestedObject();
-    io["name"] = sysSettings.inputs[i].name;
-    io["icon"] = sysSettings.inputs[i].icon;
-    io["enabled"] = sysSettings.inputs[i].enabled;
-  }
-  settings["saved"] = sysSettings.saved;
-  settings["dim"] = sysSettings.dim;
-  settings["maxVol"] = sysSettings.maxVol;
-  settings["maxStartVol"] = sysSettings.maxStartVol;
-  settings["absoluteVol"] = sysSettings.absoluteVol;
-  JsonObject settings_wifi = settings.createNestedObject("wifi");
-  settings_wifi["ssid"] = sysSettings.wifi.ssid;
-  settings_wifi["pass"] = sysSettings.wifi.pass;
-  settings_wifi["hostname"] = sysSettings.wifi.hostname;  
-
-  //generate the string
-  String retStr;
-  serializeJson(settings, retStr);
-
-  //write the settings
-  preferences.putString("settingsString", retStr);
-}
-
-void restoreSettings() {
-  String str = preferences.getString("settingsString");
-  if (str=="") {
-    return;
-  }
-  StaticJsonDocument<800> doc;
-  DeserializationError error = deserializeJson(doc, str);
-  JsonObject settings = doc.as<JsonObject>();
-
-  if (error) {
-    Serial.println("Failed to open settings");
-    return;
-  }
-  sysSettings.volume = settings["volume"];
-  sysSettings.input = settings["input"];
-  for(int i=0; i<INP_MAX; i++) {
-    sysSettings.inputs[i].enabled = settings["inputs"][i]["enabled"];
-    sysSettings.inputs[i].name = settings["inputs"][i]["name"].as<String>();
-    sysSettings.inputs[i].icon = settings["inputs"][i]["icon"].as<String>();
-  }
-  sysSettings.saved = settings["saved"];
-  sysSettings.dim = settings["dim"];
-  sysSettings.maxVol = settings["maxVol"];
-  sysSettings.maxStartVol = settings["maxStartVol"];
-  sysSettings.absoluteVol = settings["absoluteVol"];
-  sysSettings.wifi.ssid = settings["wifi"]["ssid"].as<String>();
-  sysSettings.wifi.pass = settings["wifi"]["pass"].as<String>();
-  sysSettings.wifi.hostname = settings["wifi"]["hostname"].as<String>();
-}
-
 void setup(){	
 	Serial.begin(9600);
   Serial.setDebugOutput(true);
   Serial.println("Booting...");
+
+  //start the display controller
+  display.begin();
+
+  spiffsUpdate();
 
   //setup the power control elements
   pinMode(POWER_CONTROL, OUTPUT); //this is the power control for the 5V circuit
@@ -179,14 +118,6 @@ void setup(){
   input.set(0);
   delay(5);
 
-  //start the display controller
-  display.begin();
-
-  spiffsUpdate();
-
-  //start preferences
-  preferences.begin("falk-pre", false);
-  //preferences.clear();
   restoreSettings();
 
   //add some default values if this is our first boot

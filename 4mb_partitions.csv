@@ -1,0 +1,16 @@
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+#16k nfs
+nvs,      data, nvs,     0x9000,  0x4000,
+#8k otadata to choose which ota to load from
+otadata,  data, ota,     ,  0x2000,
+#4k for application data
+phy_init, data, phy,     ,  0x1000,
+#~1M for flash (x2)
+#ota_0,    app,  ota_0,   ,        960K,
+#ota_1,    app,  ota_1,   ,        960K,
+#~2M for spiffs
+#spiffs,   data, spiffs,  ,        2024K
+ota_0,    app,  ota_0,   ,        1024K,
+ota_1,    app,  ota_1,   ,        1024K,
+spiffs,   data, spiffs,  ,        1896K

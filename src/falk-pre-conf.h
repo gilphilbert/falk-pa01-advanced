@@ -2,6 +2,8 @@
 #define INITIAL_SETUP
 
 #include "Arduino.h"
+#include "ArduinoJson.h"
+#include <Preferences.h>
 
 // ====== MINIMUM AND MAXIMUM VOLUME ====== //
 
@@ -53,12 +55,6 @@ typedef struct {
 } DeviceInput;
 
 typedef struct {
-  String ssid = "";
-  String pass = "";
-  String hostname = "falk-pa01";
-} DeviceWifi;
-
-typedef struct {
   int16_t volume = 26;
   int16_t input = 1;
   DeviceInput inputs [INP_MAX];
@@ -67,7 +63,9 @@ typedef struct {
   int maxVol = VOL_MAX;
   int maxStartVol = VOL_MAX;
   short absoluteVol = 0;
-  DeviceWifi wifi;
+  String ssid = "";
+  String pass = "";
+  String hostname = "falk-pa01";
 } DeviceSettings;
 
 extern DeviceSettings sysSettings;
@@ -88,4 +86,7 @@ extern ESP32Encoder volEnc;
 
 // for the input rotary encoder
 extern ESP32Encoder inpEnc;
+
+void saveSettings();
+void restoreSettings();
 #endif
