@@ -12,7 +12,7 @@ code .
 
 To build the firmware click on the PlatformIO tab on the left (little alien) and then select `Build` under `esp32dev`. When that completes, select `Build Filesystem Image` under `Platform`.
 
-Note: PlatformIO (can have issues on MacOS)[https://github.com/gilphilbert/falk-pa01-advanced/issues/3], for now using a virtual machine with Debian installed is the recommended workaround.
+Note: PlatformIO (https://github.com/gilphilbert/falk-pa01-advanced/issues/3)[can have issues on MacOS], for now using a virtual machine with Debian installed is the recommended workaround.
 
 ### Installation
 Assuming those both complete, you're ready to flash the firmware
