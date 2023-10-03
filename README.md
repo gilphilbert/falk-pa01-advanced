@@ -1,7 +1,7 @@
 ## FALK PA-01 Advanced Control Board
 
 ### Build
-- Install Visual Studio Code and open
+- Install [Visual Studio Code](https://code.visualstudio.com/download) and open
 - From the Extensions window, install PlatformIO (this will take a while)
 
 ```
