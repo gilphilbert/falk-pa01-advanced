@@ -20,7 +20,7 @@ InputController input;
 #include "relay-volume.h"
 VolumeController volume;
 
-#include "wifi.h"
+#include "wifi-manager.h"
 WiFiManager wifi;
 
 // to handle mute state
